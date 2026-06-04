@@ -1,13 +1,12 @@
 import streamlit as st
 from gtts import gTTS
 import io
-import re
 
-# Sayfa Ayarları (Tarayıcı sekmesinde görünecek kısım)
+# Sayfa Ayarları
 st.set_page_config(page_title="KİRİL2LATİN - Transliterasyon", page_icon="🔤", layout="centered")
 
 RUSCA_KIRIL_TABLO = {
-    'A': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
+    'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
     'Ё': 'Yo', 'ё': 'yo', 'Ж': 'J', 'ж': 'j', 'З': 'Z', 'з': 'z',
     'И': 'İ', 'и': 'i', 'Й': 'Y', 'й': 'y', 'К': 'K', 'к': 'k',
@@ -26,8 +25,10 @@ def transliterasyon_yap(metin):
         sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
     return sonuc
 
-def contains_cyrillic(text):
-    return any("\u0400" <= ch <= "\u04FF" for ch in text)
+# --- STREAMLIT MEMORY (SESSION STATE) AYARLARI ---
+# Web sayfasında yazılan metnin kaybolmaması için hafıza alanı oluşturuyoruz
+if "metin_hafizasi" not in st.session_state:
+    st.session_state["metin_hafizasi"] = ""
 
 # --- WEB ARAYÜZÜ ---
 st.title("🔤 KİRİL2LATİN")
@@ -35,64 +36,82 @@ st.subheader("Transliterasyon Uygulaması")
 st.write("Kiril harfli metni aşağıya yapıştırın veya sanal klavyeyi kullanın.")
 
 # Sanal Klavye Bölümü
-st.write("**Sanal Kiril Klavyesi** (Tıklayarak metin alanına ekleyebilirsiniz)")
+st.write("**Sanal Kiril Klavyesi** (Harflere basarak metin oluşturabilirsiniz):")
 kiril_harfleri = [
-    "А", "а", "Б", "б", "В", "в", "Г", "г", "Д", "д", "Е", "е", "Ё", "ё", "Ж", "ж",
-    "З", "з", "И", "и", "Й", "y", "К", "к", "Л", "л", "М", "м", "Н", "н", "О", "о",
-    "П", "п", "Р", "р", "С", "с", "Т", "t", "У", "у", "Ф", "ф", "Х", "х", "Ц", "ц",
-    "Ч", "ç", "Ш", "ш", "Щ", "щ", "Ъ", "ъ", "Ы", "ы", "Ь", "ь", "Э", "э", "Ю", "ю", "Я", "я"
+    ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"),
+    ("Д", "д"), ("Е", "е"), ("Ё", "ё"), ("Ж", "ж"),
+    ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"),
+    ("Л", "л"), ("М", "м"), ("Н", "н"), ("О", "о"),
+    ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"),
+    ("У", "у"), ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"),
+    ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
+    ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"),
+    ("Я", "я")
 ]
 
-# Session state ile klavyeden basılan harfleri tutuyoruz
-if "metin_kutusu" not in st.session_state:
-    st.session_state["metin_kutusu"] = ""
+# Klavye harflerini düzgün butonlar halinde dizmek için grid (8 sütunlu)
+cols = st.columns(8)
+for index, (buyuk, kucuk) in enumerate(kiril_harfleri):
+    col_idx = index % 4  # 4 çifti yan yana koyacağız (büyük-küçük yan yana dursun diye)
+    
+    with cols[col_idx * 2]:
+        if st.button(buyuk, key=f"btn_b_{buyuk}", use_container_width=True):
+            st.session_state["metin_hafizasi"] += buyuk
+            st.rerun() # Sayfayı güncelleyip harfi kutuya yansıtıyoruz
+            
+    with cols[(col_idx * 2) + 1]:
+        if st.button(kucuk, key=f"btn_k_{kucuk}", use_container_width=True):
+            st.session_state["metin_hafizasi"] += kucuk
+            st.rerun()
 
-# Harf butonlarını yan yana dizmek için grid yapısı
-cols = st.columns(12)
-for i, harf in enumerate(kiril_harfleri):
-    with cols[i % 12]:
-        if st.button(harf, key=f"btn_{harf}"):
-            st.session_state["metin_kutusu"] += harf
+st.write("---")
 
-# Giriş Alanı
-giris_metni = st.text_area("Kiril Metin:", value=st.session_state["metin_kutusu"], height=150, key="ana_giris")
+# Giriş Alanı (Hafızadaki metne bağlanmıştır)
+giris_metni = st.text_area(
+    "Kiril Metin Girişi:", 
+    value=st.session_state["metin_hafizasi"], 
+    height=120,
+    help="Klavyeden bastığınız harfler buraya eklenir. İsterseniz kendiniz de yazabilirsiniz."
+)
+
+# Değişiklikleri el yazısıyla yapıldıysa hafızaya geri alalım
+st.session_state["metin_hafizasi"] = giris_metni
 
 # Temizleme Butonu
-if st.button("Metni Temizle"):
-    st.session_state["metin_kutusu"] = ""
+if st.button("🗑️ Metni Temizle", type="secondary"):
+    st.session_state["metin_hafizasi"] = ""
     st.rerun()
 
-# Dönüştürme Mantığı
-if giris_metni:
+# --- DÖNÜŞTÜRME VE SESLENDİRME MANTIĞI ---
+if giris_metni.strip():
     latin_sonuc = transliterasyon_yap(giris_metni)
     
-    st.markdown("### 📝 Latin Alfabesi Sonucu:")
-    st.info(latin_sonuc)
+    st.markdown("### 📝 Latin Alfabesi Sonucu (Türkçe Okunuşu):")
+    st.success(latin_sonuc)
     
-    # Seslendirme Bölümü (Web uyumlu gTTS)
-    st.markdown("### 🔊 Sesli Okuma")
+    st.markdown("### 🔊 Sesli Okuma Paneli")
     col1, col2 = st.columns(2)
     
     with col1:
-        if contains_cyrillic(giris_metni):
-            st.write("Kiril (Rusça Okunuş):")
-            try:
-                tts_ru = gTTS(text=giris_metni, lang='ru', slow=False)
-                fp_ru = io.BytesIO()
-                tts_ru.write_to_fp(fp_ru)
-                st.audio(fp_ru, format='audio/mp3')
-            except Exception as e:
-                st.error("Ses yüklenemedi.")
-                
-    with col2:
-        st.write("Latin (Türkçe Okunuş simülasyonu):")
+        st.write("**Rusça Seslendirme (Kiril):**")
         try:
-            # Türkçe ses motoruyla Latin çıktıyı okutuyoruz
+            # Orijinal Kiril metni doğrudan Rusça dil koduyla ('ru') Google'a okutuyoruz
+            tts_ru = gTTS(text=giris_metni, lang='ru', slow=False)
+            fp_ru = io.BytesIO()
+            tts_ru.write_to_fp(fp_ru)
+            st.audio(fp_ru, format='audio/mp3')
+        except Exception as e:
+            st.error("Rusça ses oluşturulamadı.")
+            
+    with col2:
+        st.write("**Türkçe Yaklaşık Okunuş (Latin):**")
+        try:
+            # Çıkan Latin harfli sonucu Türkçe dil koduyla ('tr') okutuyoruz
             tts_tr = gTTS(text=latin_sonuc, lang='tr', slow=False)
             fp_tr = io.BytesIO()
             tts_tr.write_to_fp(fp_tr)
             st.audio(fp_tr, format='audio/mp3')
         except Exception as e:
-            st.error("Ses yüklenemedi.")
+            st.error("Türkçe ses oluşturulamadı.")
 
-st.caption("Not: Bu bir çeviri değil, Kiril harflerin Latin alfabesine karşılıklarının yazdırılmasıdır.")
+st.caption("Not: Bu bir çeviri değil, Kiril harflerin Türkçe Latin alfabesine göre okunuş simülasyonudur.")
