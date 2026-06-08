@@ -3,7 +3,7 @@ from gtts import gTTS
 import io
 
 # Sayfa Ayarları
-st.set_page_config(page_title="KİRİL2LATİN - Transliterasyon", layout="centered")
+st.set_page_config(page_title="KİRİL2LATİN - Transliterasyon", page_icon="🔤", layout="centered")
 
 # Orijinal Türkçe harf tablon aynen korunuyor
 RUSCA_KIRIL_TABLO = {
@@ -31,7 +31,7 @@ if "metin_hafizasi" not in st.session_state:
     st.session_state["metin_hafizasi"] = ""
 
 # --- WEB ARAYÜZÜ ---
-st.title(" KİRİL2LATİN")
+st.title("🔤 KİRİL2LATİN")
 st.subheader("Transliterasyon Uygulaması")
 st.write("Kiril harfli metni aşağıya yazın veya sanal klavyeyi kullanın.")
 
