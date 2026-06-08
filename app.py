@@ -2,12 +2,12 @@ import streamlit as st
 from gtts import gTTS
 import io
 
-# Sayfa Ayarları
-st.set_page_config(page_title="KİRİL2LATİN - Transliterasyon", page_icon="🔤", layout="centered")
+# Sayfa Ayarları - Sayfa ikonu (page_icon) tamamen kaldırıldı
+st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="centered")
 
-# Orijinal Türkçe harf tablon aynen korunuyor
+# Orijinal Türkçe harf tablonuz aynen korunuyor
 RUSCA_KIRIL_TABLO = {
-    'A': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
+    'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
     'Ё': 'Yo', 'ё': 'yo', 'Ж': 'J', 'ж': 'j', 'З': 'Z', 'з': 'z',
     'И': 'İ', 'и': 'i', 'Й': 'Y', 'й': 'y', 'К': 'K', 'к': 'k',
@@ -31,9 +31,9 @@ if "metin_hafizasi" not in st.session_state:
     st.session_state["metin_hafizasi"] = ""
 
 # --- WEB ARAYÜZÜ ---
-st.title("🔤 KİRİL2LATİN")
+st.title("KIRIL2LATIN")
 st.subheader("Transliterasyon Uygulaması")
-st.write("Kiril harfli metni aşağıya yazın veya sanal klavyeyi kullanın.")
+st.write("Kiril harfli metni aşağıya writeın veya sanal klavyeyi kullanın.")
 
 # --- SANAL KLAVYE BÖLÜMÜ ---
 st.write("**Sanal Kiril Klavyesi**")
@@ -46,18 +46,18 @@ kiril_harfleri = [
     ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
 ]
 
-# Görseldeki gibi yan yana düzeni korumak için toplam 14 alt sütun (7 çift) oluşturuyoruz
+# Büyük ve küçük harfler için yan yana bağımsız 14 sütun (7 çift)
 cols = st.columns(14)
 for index, (buyuk, kucuk) in enumerate(kiril_harfleri):
-    col_idx = index % 7  # Hangi grupta olduğunu bulur
+    col_idx = index % 7
     
-    # Büyük harf düğmesi
+    # Büyük Harf Butonu
     with cols[col_idx * 2]:
         if st.button(buyuk, key=f"btn_b_{buyuk}_{index}", use_container_width=True):
             st.session_state["metin_hafizasi"] += buyuk
             st.rerun()
             
-    # Küçük harf düğmesi
+    # Küçük Harf Butonu
     with cols[(col_idx * 2) + 1]:
         if st.button(kucuk, key=f"btn_k_{kucuk}_{index}", use_container_width=True):
             st.session_state["metin_hafizasi"] += kucuk
@@ -65,34 +65,20 @@ for index, (buyuk, kucuk) in enumerate(kiril_harfleri):
 
 st.write("---")
 
-# Giriş Alanı (Klavyeden kopmayı engelleyen dinamik girdi alanı)
-giris_metni = st.text_input(
-    "Kiril Metin Girişi:", 
-    value=st.session_state["metin_hafizasi"],
-    placeholder="Buraya tıklayıp fiziksel klavyenizle de yazabilirsiniz..."
-)
-st.session_state["metin_hafizasi"] = giris_metni
+# --- KONTROL TUŞLARI ---
+kontrol_col1, kontrol_col2, kontrol_col3 = st.columns([2, 2, 3])
 
-# Temizleme Butonu
-if st.button("🗑️ Metni Temizle", type="secondary"):
-    st.session_state["metin_hafizasi"] = ""
-    st.rerun()
+with kontrol_col1:
+    if st.button("Space (Boşluk)", use_container_width=True):
+        st.session_state["metin_hafizasi"] += " "
+        st.rerun()
 
-# --- DÖNÜŞTÜRME VE SESLENDİRME MANTIĞI ---
-if giris_metni.strip():
-    latin_sonuc = transliterasyon_yap(giris_metni)
-    
-    st.markdown("### 📝 Latin Alfabesi Sonucu:")
-    st.success(latin_sonuc)
-    
-    # Sadece Rusça seslendirme duruyor, Türkçe okuma kısmı tamamen kaldırıldı.
-    st.markdown("### 🔊 Sesli Okuma (Rusça Orijinal)")
-    try:
-        tts_ru = gTTS(text=giris_metni, lang='ru', slow=False)
-        fp_ru = io.BytesIO()
-        tts_ru.write_to_fp(fp_ru)
-        st.audio(fp_ru, format='audio/mp3')
-    except Exception as e:
-        st.error("Rusça ses oluşturulamadı.")
+with kontrol_col2:
+    if st.button("Sil (Backspace)", use_container_width=True):
+        if len(st.session_state["metin_hafizasi"]) > 0:
+            st.session_state["metin_hafizasi"] = st.session_state["metin_hafizasi"][:-1]
+        st.rerun()
 
-st.caption("Not: Bu bir çeviri değil, Kiril harflerin Latin alfabesine karşılıklarının yazdırılmasıdır.")
+with kontrol_col3:
+    if st.button("Tüm Metni Temizle", type="secondary", use_container_width=True):
+        st.session_state
