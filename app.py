@@ -3,9 +3,9 @@ from gtts import gTTS
 import io
 
 # Sayfa Ayarları
-st.set_page_config(page_title="KİRİL2LATİN - Transliterasyon", page_icon="🔤", layout="centered")
+st.set_page_config(page_title="KİRİL2LATİN - Transliterasyon", layout="centered")
 
-# Orijinal tablonu aynen geri getirdim (Ş, Ç, ı, ^ harfleri korundu)
+# Orijinal Türkçe harf tablon aynen korunuyor
 RUSCA_KIRIL_TABLO = {
     'A': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
@@ -31,9 +31,9 @@ if "metin_hafizasi" not in st.session_state:
     st.session_state["metin_hafizasi"] = ""
 
 # --- WEB ARAYÜZÜ ---
-st.title("🔤 KİRİL2LATİN")
+st.title(" KİRİL2LATİN")
 st.subheader("Transliterasyon Uygulaması")
-st.write("Kiril harfli metni aşağıya yapıştırın veya sanal klavyeyi kullanın.")
+st.write("Kiril harfli metni aşağıya yazın veya sanal klavyeyi kullanın.")
 
 # --- SANAL KLAVYE BÖLÜMÜ ---
 st.write("**Sanal Kiril Klavyesi**")
@@ -46,43 +46,37 @@ kiril_harfleri = [
     ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
 ]
 
-# Harfler 7 sütunda büyük-küçük yan yana butonlar olarak listelenir
-cols = st.columns(7)
+# Görseldeki gibi yan yana düzeni korumak için toplam 14 alt sütun (7 çift) oluşturuyoruz
+cols = st.columns(14)
 for index, (buyuk, kucuk) in enumerate(kiril_harfleri):
-    col_idx = index % 7
-    with cols[col_idx]:
-        if st.button(f"{buyuk} {kucuk}", key=f"btn_{buyuk}_{kucuk}", use_container_width=True):
+    col_idx = index % 7  # Hangi grupta olduğunu bulur
+    
+    # Büyük harf düğmesi
+    with cols[col_idx * 2]:
+        if st.button(buyuk, key=f"btn_b_{buyuk}_{index}", use_container_width=True):
+            st.session_state["metin_hafizasi"] += buyuk
+            st.rerun()
+            
+    # Küçük harf düğmesi
+    with cols[(col_idx * 2) + 1]:
+        if st.button(kucuk, key=f"btn_k_{kucuk}_{index}", use_container_width=True):
             st.session_state["metin_hafizasi"] += kucuk
             st.rerun()
 
 st.write("---")
-kontrol_col1, kontrol_col2, kontrol_col3 = st.columns([2, 2, 3])
 
-with kontrol_col1:
-    if st.button("Space (Boşluk Bırak)", use_container_width=True):
-        st.session_state["metin_hafizasi"] += " "
-        st.rerun()
-
-with kontrol_col2:
-    if st.button("⬅️ Sil (Backspace)", use_container_width=True):
-        if len(st.session_state["metin_hafizasi"]) > 0:
-            st.session_state["metin_hafizasi"] = st.session_state["metin_hafizasi"][:-1]
-        st.rerun()
-
-with kontrol_col3:
-    if st.button("🗑️ Tüm Metni Temizle", type="secondary", use_container_width=True):
-        st.session_state["metin_hafizasi"] = ""
-        st.rerun()
-
-# --- GİRİŞ ALANI ---
-giris_metni = st.text_area(
+# Giriş Alanı (Klavyeden kopmayı engelleyen dinamik girdi alanı)
+giris_metni = st.text_input(
     "Kiril Metin Girişi:", 
-    value=st.session_state["metin_hafizasi"], 
-    height=120,
-    placeholder="Sanal klavyeyi kullanabilir veya buraya doğrudan yazabilirsiniz..."
+    value=st.session_state["metin_hafizasi"],
+    placeholder="Buraya tıklayıp fiziksel klavyenizle de yazabilirsiniz..."
 )
-
 st.session_state["metin_hafizasi"] = giris_metni
+
+# Temizleme Butonu
+if st.button("🗑️ Metni Temizle", type="secondary"):
+    st.session_state["metin_hafizasi"] = ""
+    st.rerun()
 
 # --- DÖNÜŞTÜRME VE SESLENDİRME MANTIĞI ---
 if giris_metni.strip():
@@ -91,8 +85,8 @@ if giris_metni.strip():
     st.markdown("### 📝 Latin Alfabesi Sonucu:")
     st.success(latin_sonuc)
     
-    # Sadece ve sadece Rusça orijinal ses motoru bırakıldı, Türkçe ses motoru tamamen temizlendi.
-    st.markdown("### 🔊 Sesli Okuma (Rusça)")
+    # Sadece Rusça seslendirme duruyor, Türkçe okuma kısmı tamamen kaldırıldı.
+    st.markdown("### 🔊 Sesli Okuma (Rusça Orijinal)")
     try:
         tts_ru = gTTS(text=giris_metni, lang='ru', slow=False)
         fp_ru = io.BytesIO()
