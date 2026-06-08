@@ -39,7 +39,7 @@ st.caption("Kiril harfli metni aşağıya yapıştırın veya aşağıdaki alfab
 # --- İKİ SÜTUNLU ANA DÜZEN ---
 sol_sutun, sag_sutun = st.columns([1, 1.2])
 
-# --- SOL SÜTUN: SANAL KLAVYE (DEBUG EDİLDİ) ---
+# --- SOL SÜTUN: SANAL KLAVYE ---
 with sol_sutun:
     st.write("Kiril Alfabe - Alfabetik Sıra")
     
@@ -51,37 +51,34 @@ with sol_sutun:
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
     
-    # Döngü içinde çökme yaşanmaması için satır satır (Grid) yapı kuruldu
     for index, (buyuk, kucuk) in enumerate(kiril_harfleri):
         if index % 7 == 0:
-            klavye_cols = st.columns(14) # Her 7 harfte bir yeni temiz satır açılır
+            klavye_cols = st.columns(14)
             
         col_idx = index % 7
         
-        # Büyük Harf Butonu
         with klavye_cols[col_idx * 2]:
             if st.button(buyuk, key=f"b_{buyuk}_{index}", use_container_width=True):
                 st.session_state["metin_hafizasi"] += buyuk
                 st.rerun()
                 
-        # Küçük Harf Butonu
         with klavye_cols[(col_idx * 2) + 1]:
             if st.button(kucuk, key=f"k_{kucuk}_{index}", use_container_width=True):
                 st.session_state["metin_hafizasi"] += kucuk
                 st.rerun()
 
-# --- SAĞ SÜTUN: METİN GİRİŞİ, KALAN BUTONLAR VE BÜYÜTÜLMÜŞ ÇIKTI ---
+# --- SAĞ SÜTUN: METİN GİRİŞİ VE TARZI EŞİTLENMİŞ SONUÇ ALANI ---
 with sag_sutun:
-    # Kiril Giriş Alanı
+    # Kiril Giriş Alanı (Tarz ayarları ve yazı puntosu için optimize edildi)
     giris_metni = st.text_area(
         "", 
         value=st.session_state["metin_hafizasi"], 
-        height=200,
+        height=180,
         label_visibility="collapsed"
     )
     st.session_state["metin_hafizasi"] = giris_metni
 
-    # İstediğin gibi sadece 3 buton bırakıldı (Diğer ikisi kaldırıldı)
+    # 3'lü Buton Sırası
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
@@ -100,27 +97,30 @@ with sag_sutun:
     # Sonuç Alanı Başlığı
     st.write("Latin alfabesi sonucu:")
     
-    # Küçük görünme sorunu için CSS ile yazı boyutu 24px yapıldı ve kalınlaştırıldı
-    if giris_metni:
-        latin_sonuc = transliterasyon_yap(giris_metni)
-        st.markdown(
-            f"""
-            <div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; border-left: 6px solid #2e7d32;">
-                <span style="color: #1b5e20; font-size: 24px; font-weight: bold; font-family: sans-serif;">
-                    {latin_sonuc}
-                </span>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-    else:
-        st.markdown(
-            """
-            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; border-left: 6px solid #9e9e9e; height: 70px;">
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
+    # Latin Sonuç Paneli (Kiril Giriş Kutusuyla birebir aynı punto, boşluk ve tarza getirildi)
+    latin_sonuc = transliterasyon_yap(giris_metni) if giris_metni else ""
+    
+    st.markdown(
+        f"""
+        <textarea 
+            readonly 
+            style="
+                width: 100%; 
+                height: 180px; 
+                font-size: 18px; 
+                font-family: inherit;
+                padding: 12px; 
+                border-radius: 8px; 
+                border: 1px solid #ccc; 
+                background-color: #f8f9fa; 
+                color: #212529;
+                resize: none;
+                outline: none;
+            "
+        >{latin_sonuc}</textarea>
+        """, 
+        unsafe_allow_html=True
+    )
 
     # Ses oynatıcı paneli
     if st.session_state["ses_tetikleyici"] and giris_metni.strip():
