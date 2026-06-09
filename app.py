@@ -60,22 +60,28 @@ with sol_sutun:
         with klavye_cols[col_idx * 2]:
             if st.button(buyuk, key=f"b_{buyuk}_{index}", use_container_width=True):
                 st.session_state["kiril_yazi_alani"] += buyuk
+                st.session_state["ses_verisi"] = None  # Metin değişince eski sesi temizle
                 st.rerun()
                 
         with klavye_cols[(col_idx * 2) + 1]:
             if st.button(kucuk, key=f"k_{kucuk}_{index}", use_container_width=True):
                 st.session_state["kiril_yazi_alani"] += kucuk
+                st.session_state["ses_verisi"] = None  # Metin değişince eski sesi temizle
                 st.rerun()
 
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
-    # Kiril Giriş Alanı - `key` parametresi doğrudan state yönetimine bağlandı
+    # Kiril Giriş Alanı
     giris_metni = st.text_area(
         "", 
         height=180,
         key="kiril_yazi_alani",
         label_visibility="collapsed"
     )
+
+    # CRITICAL DEBUG: Yavaş okuma seçimini butonlardan ÖNCEYE aldık. 
+    # Böylece kod yukarıdan aşağıya çalışırken buton hız değerini görebiliyor.
+    yavas_mi = st.checkbox("Yavaş Okuma (Tane tane telaffuz et)", key="yavas_oku_secimi")
 
     # 3'lü Buton Sırası
     btn_col1, btn_col2, btn_col3 = st.columns(3)
@@ -94,8 +100,7 @@ with sag_sutun:
         if st.button("Sesle Oku (Kiril)", use_container_width=True):
             if st.session_state["kiril_yazi_alani"].strip():
                 try:
-                    # Yavaş okuma kontrolünü anlık durumdan çekiyoruz
-                    yavas_mi = st.session_state.get("yavas_oku_secimi", False)
+                    # Yukarıda tanımlanan yavas_mi durumunu direkt ses motoruna veriyoruz
                     tts_ru = gTTS(text=st.session_state["kiril_yazi_alani"], lang='ru', slow=yavas_mi)
                     fp_ru = io.BytesIO()
                     tts_ru.write_to_fp(fp_ru)
@@ -103,13 +108,10 @@ with sag_sutun:
                 except Exception as e:
                     st.error("Ses oluşturulamadı.")
 
-    # Yavaş Okuma Seçeneği (Kalıcı hafızalı checkbox)
-    st.checkbox("Yavaş Okuma (Tane tane telaffuz et)", key="yavas_oku_secimi")
-
     # Sonuç Alanı Başlığı
     st.write("Latin alfabesi sonucu:")
     
-    # Girişteki metne göre transliterasyon hesaplama
+    # Girişteki metne göre anlık canlı transliterasyon hesabı
     latin_sonuc = transliterasyon_yap(st.session_state["kiril_yazi_alani"]) if st.session_state["kiril_yazi_alani"] else ""
     
     # Giriş kutusuyla tarz, punto, yükseklik ve boşlukları birebir eşitlenmiş Streamlit Text Area bileşeni
