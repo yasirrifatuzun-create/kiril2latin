@@ -67,9 +67,9 @@ with sol_sutun:
                 st.session_state["metin_hafizasi"] += kucuk
                 st.rerun()
 
-# --- SAĞ SÜTUN: METİN GİRİŞİ VE TARZI EŞİTLENMİŞ SONUÇ ALANI ---
+# --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
-    # Kiril Giriş Alanı (Tarz ayarları ve yazı puntosu için optimize edildi)
+    # Kiril Giriş Alanı
     giris_metni = st.text_area(
         "", 
         value=st.session_state["metin_hafizasi"], 
@@ -81,8 +81,11 @@ with sag_sutun:
     # 3'lü Buton Sırası
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
+    donustur_basildi = False
     with btn_col1:
-        st.button("Dönüştür", type="primary", use_container_width=True)
+        # Dönüştür butonuna basıldığında tetiklenecek mekanizma eklendi
+        if st.button("Dönüştür", type="primary", use_container_width=True):
+            donustur_basildi = True
         
     with btn_col2:
         if st.button("Temizle", use_container_width=True):
@@ -94,10 +97,13 @@ with sag_sutun:
         if st.button("Sesle Oku (Kiril)", use_container_width=True):
             st.session_state["ses_tetikleyici"] = True
 
+    # Yavaş Okuma Seçeneği (İsteğe bağlı hız ayarı)
+    yavas_oku = st.checkbox("Yavaş Okuma (Tane tane telaffuz et)")
+
     # Sonuç Alanı Başlığı
     st.write("Latin alfabesi sonucu:")
     
-    # Latin Sonuç Paneli (Kiril Giriş Kutusuyla birebir aynı punto, boşluk ve tarza getirildi)
+    # Giriş yapılmışsa veya Dönüştür butonuna basılmışsa sonucu göster
     latin_sonuc = transliterasyon_yap(giris_metni) if giris_metni else ""
     
     st.markdown(
@@ -122,10 +128,11 @@ with sag_sutun:
         unsafe_allow_html=True
     )
 
-    # Ses oynatıcı paneli
+    # Ses oynatıcı paneli (Yavaş okuma parametresi entegre edildi)
     if st.session_state["ses_tetikleyici"] and giris_metni.strip():
         try:
-            tts_ru = gTTS(text=giris_metni, lang='ru', slow=False)
+            # slow=yavas_oku parametresi ile kullanıcının seçimi gTTS motoruna aktarılır
+            tts_ru = gTTS(text=giris_metni, lang='ru', slow=yavas_oku)
             fp_ru = io.BytesIO()
             tts_ru.write_to_fp(fp_ru)
             st.audio(fp_ru, format='audio/mp3')
