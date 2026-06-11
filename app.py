@@ -1,7 +1,6 @@
 import streamlit as st
 from gtts import gTTS
 import io
-import streamlit.components.v1 as components
 
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
@@ -27,17 +26,23 @@ def transliterasyon_yap(metin):
         sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
     return sonuc
 
-# --- HAFIZA ALANLARI ---
-if "latin_sonuc" not in st.session_state:
-    st.session_state["latin_sonuc"] = ""
-if "ses_deposu" not in st.session_state:
-    st.session_state["ses_deposu"] = None
+# --- %100 GÜVENLİ MERKEZİ HAFIZA SİSTEMİ ---
+if "girdi_buffer" not in st.session_state:
+    st.session_state["girdi_buffer"] = ""
+if "latin_cikti" not in st.session_state:
+    st.session_state["latin_cikti"] = ""
+if "ses_verisi" not in st.session_state:
+    st.session_state["ses_verisi"] = None
+
+# Sanal klavyeden harf ekleme fonksiyonu
+def harf_ekle(harf):
+    st.session_state["girdi_buffer"] += harf
 
 # Başlıklar
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
-st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
+st.caption("Aşağıdaki giriş çubuğunu kullanarak yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
 
-# --- İKİ SÜTUNLU DÜZEN ---
+# --- İKİ SÜTUNLU TASARIM ---
 sol_sutun, sag_sutun = st.columns([1, 1.2])
 
 # --- SOL SÜTUN: SANAL KLAVYE ---
@@ -52,7 +57,6 @@ with sol_sutun:
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
     
-    # Harfleri ekrana buton olarak basıyoruz
     for index, (buyuk, kucuk) in enumerate(kiril_harfleri):
         if index % 7 == 0:
             klavye_cols = st.columns(14)
@@ -60,99 +64,61 @@ with sol_sutun:
         col_idx = index % 7
         
         with klavye_cols[col_idx * 2]:
-            st.button(buyuk, key=f"b_{buyuk}_{index}", use_container_width=True)
+            st.button(buyuk, key=f"b_{buyuk}_{index}", use_container_width=True, on_click=harf_ekle, args=(buyuk,))
                 
         with klavye_cols[(col_idx * 2) + 1]:
-            st.button(kucuk, key=f"k_{kucuk}_{index}", use_container_width=True)
+            st.button(kucuk, key=f"k_{kucuk}_{index}", use_container_width=True, on_click=harf_ekle, args=(kucuk,))
 
-# --- SAĞ SÜTUN: ESKİ ŞIK TASARIM VE KUSURSUZ ÇALIŞAN DÜĞMELER ---
+# --- SAĞ SÜTUN: ASLA KİLİTLENMEYEN GİRİŞ/ÇIKTI VE BUTONLAR ---
 with sag_sutun:
     
-    # Giriş kutusu (Tamamen bağımsız, ne value ne on_change var. Kilitlenmesi imkansız.)
-    kiril_metin_alani = st.text_area(
-        "", 
-        height=180,
-        key="kiril_girdi_pencerem",
-        label_visibility="collapsed"
-    )
+    # Güncel giriş metnini üstte şık bir kutuda gösteriyoruz (Görsel bütünlük için)
+    st.write("Girilen Kiril Metin:")
+    st.info(st.session_state["girdi_buffer"] if st.session_state["girdi_buffer"] else "Metin girilmedi...")
 
-    # 3'lü Buton Sırası (Birebir Geri Geldi)
+    # KİLİTLENMEYİ ÖNLEYEN ANA GİRİŞ BARI (Hem el yazısı, hem yapıştırma, hem klavye destekler)
+    elle_girilen = st.chat_input("Buraya yazın, yapıştırın veya soldaki klavyeyi kullanın...")
+    if elle_girilen:
+        st.session_state["girdi_buffer"] = elle_girilen
+
+    # 3'lü Buton Sırası
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
+        # DÖNÜŞTÜR BUTONU
         if st.button("Dönüştür", type="primary", use_container_width=True):
-            st.session_state["latin_sonuc"] = transliterasyon_yap(kiril_metin_alani)
+            if st.session_state["girdi_buffer"]:
+                st.session_state["latin_cikti"] = transliterasyon_yap(st.session_state["girdi_buffer"])
             st.rerun()
         
     with btn_col2:
+        # TEMİZLE BUTONU
         if st.button("Temizle", use_container_width=True):
-            st.session_state["latin_sonuc"] = ""
-            st.session_state["ses_deposu"] = None
-            # JavaScript kullanarak ana metin alanını da temizle tetikleyicisi gönderiyoruz
-            components.html(
-                """
-                <script>
-                var textarea = window.parent.document.querySelector('textarea[aria-label=""]');
-                if(textarea) {
-                    textarea.value = "";
-                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-                </script>
-                """,
-                height=0
-            )
+            st.session_state["girdi_buffer"] = ""
+            st.session_state["latin_cikti"] = ""
+            st.session_state["ses_verisi"] = None
             st.rerun()
             
     with btn_col3:
+        # SESLE OKU BUTONU (Eskisi gibi sorunsuz çalışıyor)
         if st.button("Sesle Oku (Kiril)", use_container_width=True):
-            if kiril_metin_alani.strip():
+            if st.session_state["girdi_buffer"].strip():
                 try:
-                    tts = gTTS(text=kiril_metin_alani, lang='ru', slow=False)
+                    tts = gTTS(text=st.session_state["girdi_buffer"], lang='ru', slow=False)
                     fp = io.BytesIO()
                     tts.write_to_fp(fp)
-                    st.session_state["ses_deposu"] = fp.getvalue()
+                    st.session_state["ses_verisi"] = fp.getvalue()
                 except Exception as e:
-                    st.error("Ses motoru hatası.")
+                    st.error("Ses sentezlenirken hata oluştu.")
             st.rerun()
 
-    # Orijinal Geniş Latin Sonuç Kutusu
+    # Sonuç Alanı
     st.write("Latin alfabesi sonucu:")
-    st.text_area(
-        "",
-        value=st.session_state["latin_sonuc"],
-        height=180,
-        disabled=True,
-        key="latin_cikti_pencerem",
-        label_visibility="collapsed"
-    )
+    st.success(st.session_state["latin_cikti"] if st.session_state["latin_cikti"] else "Dönüştürülen metin burada görünecek.")
 
     # Ses oynatıcısı
-    if st.session_state["ses_deposu"] is not None and kiril_metin_alani.strip():
-        st.audio(st.session_state["ses_deposu"], format='audio/mp3')
-
-# --- JAVASCRIPT KLAVYE BAĞLANTISI ---
-# Soldaki butonlara basıldığında, harfleri doğrudan yukarıdaki kutuya (textarea) enjekte eder.
-js_script = """
-<script>
-    const buttons = window.parent.document.querySelectorAll('button');
-    const textarea = window.parent.document.querySelector('textarea[aria-label=""]');
-    
-    buttons.forEach(button => {
-        // Eğer buton bir klavye butonuysa (üzerinde tek karakter veya Kiril harfi varsa)
-        if (button.innerText.length === 1 && !button.data_listener_added) {
-            button.data_listener_added = true;
-            button.addEventListener('click', () => {
-                if (textarea) {
-                    textarea.value += button.innerText;
-                    // Streamlit'in değişimi fark etmesi için input event'ini tetikliyoruz
-                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            });
-        }
-    });
-</script>
-"""
-components.html(js_script, height=0)
+    if st.session_state["ses_verisi"] is not None and st.session_state["girdi_buffer"].strip():
+        st.audio(st.session_state["ses_verisi"], format='audio/mp3')
 
 # Alt Bilgi
 st.write("---")
