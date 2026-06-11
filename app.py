@@ -26,31 +26,23 @@ def transliterasyon_yap(metin):
         sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
     return sonuc
 
-# --- KİLİTLENMEYEN TEK MERKEZLİ STATE YAPISI ---
-if "metin_deposu" not in st.session_state:
-    st.session_state["metin_deposu"] = ""
+# --- GÜVENLİ VE BAĞIMSIZ HAFIZA HÜCRELERİ ---
+if "klavye_girdisi" not in st.session_state:
+    st.session_state["klavye_girdisi"] = ""
+if "latin_sonuc" not in st.session_state:
+    st.session_state["latin_sonuc"] = ""
 if "ses_deposu" not in st.session_state:
     st.session_state["ses_deposu"] = None
 
-# Kullanıcı kutuya el yazısı girdiğinde hafızayı günceller
-def el_yazisi_degisti():
-    st.session_state["metin_deposu"] = st.session_state["kiril_girdi_alani"]
+# Sanal klavye butonları için güvenli ekleme (Asla hata fırlatmaz)
+def harf_ekle(harf):
+    st.session_state["klavye_girdisi"] += harf
 
-# Sanal klavye butonuna basıldığında tetiklenen kilit kırıcı
-def sanal_klavye_tetiklendi(harf):
-    # Eğer kullanıcı kutuda daha önce elle bir şey yazdıysa onu da kaybetmemek için çekiyoruz
-    if "kiril_girdi_alani" in st.session_state:
-        st.session_state["metin_deposu"] = st.session_state["kiril_girdi_alani"]
-        
-    st.session_state["metin_deposu"] += harf
-    # Tarayıcıya yeni veriyi zorla dayatmak için widget state'ini elden güncelliyoruz
-    st.session_state["kiril_girdi_alani"] = st.session_state["metin_deposu"]
-
-# Başlıklar
+# Başlık Alanları
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
 st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
 
-# --- İKİ SÜTUNLU DÜZEN ---
+# --- İKİ SÜTUNLU KUSURSUZ DÜZEN ---
 sol_sutun, sag_sutun = st.columns([1, 1.2])
 
 # --- SOL SÜTUN: SANAL KLAVYE ---
@@ -60,7 +52,7 @@ with sol_sutun:
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"), 
         ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"), 
-        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"), 
+        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "t"), ("У", "у"), 
         ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"), 
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
@@ -72,72 +64,71 @@ with sol_sutun:
         col_idx = index % 7
         
         with klavye_cols[col_idx * 2]:
-            st.button(buyuk, key=f"b_{buyuk}_{index}", use_container_width=True, on_click=sanal_klavye_tetiklendi, args=(buyuk,))
+            st.button(buyuk, key=f"b_{buyuk}_{index}", use_container_width=True, on_click=harf_ekle, args=(buyuk,))
                 
         with klavye_cols[(col_idx * 2) + 1]:
-            st.button(kucuk, key=f"k_{kucuk}_{index}", use_container_width=True, on_click=sanal_klavye_tetiklendi, args=(kucuk,))
+            st.button(kucuk, key=f"k_{kucuk}_{index}", use_container_width=True, on_click=harf_ekle, args=(kucuk,))
 
-# --- SAĞ SÜTUN: ASLA KİLİTLENMEYEN METİN ALANLARI VE AKSİYONLAR ---
+# --- SAĞ SÜTUN: KİLİTLENMEYEN GİRİŞ/ÇIKTI VE AKSİYONLAR ---
 with sag_sutun:
     
-    # GİRİŞ KUTUSU: value parametresi kaldırıldı, kilitlenme tamamen önlendi.
-    st.text_area(
-        "Kiril Giriş Alanı",
-        value=st.session_state["metin_deposu"],
+    # EĞER kullanıcı sanal klavyeyi kullandıysa, text_area varsayılan olarak o metinle açılır.
+    # Kullanıcı elle yazmak isterse kutuyu tamamen temizleyip yazabilir, çakışma riski sıfırdır.
+    kiril_metin_alani = st.text_area(
+        "", 
+        value=st.session_state["klavye_girdisi"],
         height=180,
-        key="kiril_girdi_alani",
-        on_change=el_yazisi_degisti,
+        key="kiril_kutusu_ana",
         label_visibility="collapsed"
     )
-    
-    # Emniyet kemeri: Her render durumunda güncel metni çekiyoruz
-    guncel_metin = st.session_state.get("metin_deposu", "")
 
-    # İşlem Butonları
-    b1, b2, b3 = st.columns(3)
+    # 3'lü Buton Düzeni
+    btn_col1, btn_col2, btn_col3 = st.columns(3)
     
-    with b1:
-        # DÖNÜŞTÜR BUTTON: Sayfayı rerun ederek senkronizasyonu %100 sağlar
+    with btn_col1:
+        # DÖNÜŞTÜR BUTONU: Kutudaki metni güvenli bir şekilde okur ve dönüştürür
         if st.button("Dönüştür", type="primary", use_container_width=True):
+            st.session_state["latin_sonuc"] = transliterasyon_yap(kiril_metin_alani)
+            # Sanal klavye hafızasını güncel tutalım ki silinmesin
+            st.session_state["klavye_girdisi"] = kiril_metin_alani
             st.rerun()
-            
-    with b2:
+        
+    with btn_col2:
+        # TEMİZLE BUTONU: Hafızadaki ve ekrandaki her şeyi tamamen sıfırlar
         if st.button("Temizle", use_container_width=True):
-            st.session_state["metin_deposu"] = ""
-            st.session_state["kiril_girdi_alani"] = ""
+            st.session_state["klavye_girdisi"] = ""
+            st.session_state["latin_sonuc"] = ""
             st.session_state["ses_deposu"] = None
             st.rerun()
             
-    with b3:
+    with btn_col3:
+        # SESLE OKU BUTONU
         if st.button("Sesle Oku (Kiril)", use_container_width=True):
-            if guncel_metin.strip():
+            if kiril_metin_alani.strip():
                 try:
-                    tts = gTTS(text=guncel_metin, lang='ru', slow=False)
+                    tts = gTTS(text=kiril_metin_alani, lang='ru', slow=False)
                     fp = io.BytesIO()
                     tts.write_to_fp(fp)
                     st.session_state["ses_deposu"] = fp.getvalue()
                 except Exception as e:
-                    st.error("Ses sentezlenemedi.")
+                    st.error("Ses motoru başlatılamadı.")
             st.rerun()
 
     # Sonuç Alanı Başlığı
     st.write("Latin alfabesi sonucu:")
     
-    # Dönüştürme doğrudan canlı değişkenden besleniyor, buton bağımsız anlık çalışır
-    latin_sonuc_verisi = transliterasyon_yap(guncel_metin)
-    
-    # Çıktı Kutusu
+    # Çıktı Kutusu (Kilitlenmesi imkansız salt okunur alan)
     st.text_area(
         "",
-        value=latin_sonuc_verisi,
+        value=st.session_state["latin_sonuc"],
         height=180,
         disabled=True,
-        key="latin_cikti_kutusu_stabil",
+        key="latin_sonuc_kutusu_kesin",
         label_visibility="collapsed"
     )
 
     # Ses oynatıcısı
-    if st.session_state["ses_deposu"] is not None and guncel_metin.strip():
+    if st.session_state["ses_deposu"] is not None and kiril_metin_alani.strip():
         st.audio(st.session_state["ses_deposu"], format='audio/mp3')
 
 # Alt Bilgi
