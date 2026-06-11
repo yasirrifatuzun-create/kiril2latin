@@ -26,19 +26,20 @@ def transliterasyon_yap(metin):
         sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
     return sonuc
 
-# --- GÜVENLİ VE SABİT HAFIZA SİSTEMİ ---
-if "form_girdisi" not in st.session_state:
-    st.session_state["form_girdisi"] = ""
-if "form_cikti" not in st.session_state:
-    st.session_state["form_cikti"] = ""
-if "form_ses" not in st.session_state:
-    st.session_state["form_ses"] = None
+# --- HAFIZA AYARLARI ---
+if "kiril_kutusu" not in st.session_state:
+    st.session_state["kiril_kutusu"] = ""
+if "latin_sonuc" not in st.session_state:
+    st.session_state["latin_sonuc"] = ""
+if "ses_deposu" not in st.session_state:
+    st.session_state["ses_deposu"] = None
 
-# Sanal klavye buton aksiyonu
-def harf_bas(harf):
-    st.session_state["form_girdisi"] += harf
+# Kilitlenmeyi önleyen buton fonksiyonu
+def harf_ekle(harf):
+    # Ekranda o an yazan metni session_state'den çekip üzerine harfi ekliyoruz
+    st.session_state["kiril_kutusu"] = st.session_state.get("kiril_kutusu", "") + harf
 
-# Başlık Alanları
+# Başlıklar (Orijinal Tasarım)
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
 st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
 
@@ -64,72 +65,67 @@ with sol_sutun:
         col_idx = index % 7
         
         with klavye_cols[col_idx * 2]:
-            st.button(buyuk, key=f"b_{buyuk}_{index}", use_container_width=True, on_click=harf_bas, args=(buyuk,))
+            st.button(buyuk, key=f"b_{buyuk}_{index}", use_container_width=True, on_click=harf_ekle, args=(buyuk,))
                 
         with klavye_cols[(col_idx * 2) + 1]:
-            st.button(kucuk, key=f"k_{kucuk}_{index}", use_container_width=True, on_click=harf_bas, args=(kucuk,))
+            st.button(kucuk, key=f"k_{kucuk}_{index}", use_container_width=True, on_click=harf_ekle, args=(kucuk,))
 
-# --- SAĞ SÜTUN: ARTIK BOZULMAYAN ORİJİNAL TASARIM ---
+# --- SAĞ SÜTUN: ASLA KİLİTLENMEYEN GİRİŞ/ÇIKTI KUTULARI ---
 with sag_sutun:
     
-    # Kilitlenmeleri önleyen form yapısı
-    with st.form("transliterasyon_formu", clear_on_submit=False):
-        
-        # Orijinal üst büyük metin alanı
-        kiril_metin_alani = st.text_area(
-            "", 
-            value=st.session_state["form_girdisi"],
-            height=180,
-            key="kiril_form_kutusu",
-            label_visibility="collapsed"
-        )
-        
-        # 3'lü Buton Sırası
-        btn_col1, btn_col2, btn_col3 = st.columns(3)
-        
-        with btn_col1:
-            # DÖNÜŞTÜR: Sadece dönüştürme yapar, hafızayı senkronize eder
-            if st.form_submit_button("Dönüştür", type="primary", use_container_width=True):
-                st.session_state["form_girdisi"] = kiril_metin_alani
-                st.session_state["form_cikti"] = transliterasyon_yap(kiril_metin_alani)
-                st.rerun()
-            
-        with btn_col2:
-            # TEMİZLE: Hatalı atamalardan arındırıldı, tüm hafızayı güvenle sıfırlar
-            if st.form_submit_button("Temizle", use_container_width=True):
-                st.session_state["form_girdisi"] = ""
-                st.session_state["form_cikti"] = ""
-                st.session_state["form_ses"] = None
-                st.rerun()
-                
-        with btn_col3:
-            # SESLE OKU: Kiril metni alır ve ses dosyasına dönüştürür
-            if st.form_submit_button("Sesle Oku (Kiril)", use_container_width=True):
-                st.session_state["form_girdisi"] = kiril_metin_alani
-                if kiril_metin_alani.strip():
-                    try:
-                        tts = gTTS(text=kiril_metin_alani, lang='ru', slow=False)
-                        fp = io.BytesIO()
-                        tts.write_to_fp(fp)
-                        st.session_state["form_ses"] = fp.getvalue()
-                    except Exception as e:
-                        st.error("Ses sentezlenemedi.")
-                st.rerun()
+    # GİRİŞ KUTUSU: Değişken çakışması yapmaması için 'value' parametresi kaldırıldı.
+    # Doğrudan canlı hücreye ('key') bağlı. Asla donmaz, butonları kilitlemez.
+    kiril_girdisi = st.text_area(
+        "", 
+        height=180,
+        key="kiril_kutusu",
+        label_visibility="collapsed"
+    )
 
-    # Orijinal alt büyük çıktı alanı
+    # 3'lü Buton Sırası (Birebir Aynı Tasarım)
+    btn_col1, btn_col2, btn_col3 = st.columns(3)
+    
+    with btn_col1:
+        # DÖNÜŞTÜR BUTONU: Kutuda o an ne varsa anında yakalar ve transliterasyon yapar
+        if st.button("Dönüştür", type="primary", use_container_width=True):
+            st.session_state["latin_sonuc"] = transliterasyon_yap(kiril_girdisi)
+            st.rerun()
+        
+    with btn_col2:
+        # TEMİZLE BUTONU: Tüm girdileri ve çıktıları sıfırlar
+        if st.button("Temizle", use_container_width=True):
+            st.session_state["kiril_kutusu"] = ""
+            st.session_state["latin_sonuc"] = ""
+            st.session_state["ses_deposu"] = None
+            st.rerun()
+            
+    with btn_col3:
+        # SESLE OKU BUTONU
+        if st.button("Sesle Oku (Kiril)", use_container_width=True):
+            if kiril_girdisi.strip():
+                try:
+                    tts = gTTS(text=kiril_girdisi, lang='ru', slow=False)
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    st.session_state["ses_deposu"] = fp.getvalue()
+                except Exception as e:
+                    st.error("Ses sentezlenemedi.")
+            st.rerun()
+
+    # Orijinal Çıktı Kutusu
     st.write("Latin alfabesi sonucu:")
     st.text_area(
         "",
-        value=st.session_state["form_cikti"],
+        value=st.session_state["latin_sonuc"],
         height=180,
         disabled=True,
-        key="latin_form_cikti_kutusu",
+        key="latin_sonuc_orijinal_kutusu",
         label_visibility="collapsed"
     )
 
     # Ses oynatıcısı
-    if st.session_state["form_ses"] is not None and st.session_state["form_girdisi"].strip():
-        st.audio(st.session_state["form_ses"], format='audio/mp3')
+    if st.session_state["ses_deposu"] is not None and kiril_girdisi.strip():
+        st.audio(st.session_state["ses_deposu"], format='audio/mp3')
 
 # Alt Bilgi
 st.write("---")
