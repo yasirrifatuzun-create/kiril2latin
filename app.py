@@ -72,4 +72,64 @@ with sol_sutun:
 # --- SAĞ SÜTUN: VERİ ALANI VE AKSİYONLAR ---
 with sag_sutun:
     
-    # Giriş Alanı: Doğrudan harf_
+    # Giriş Alanı: Doğrudan harf_bas veya el yazısıyla beslenen ana bileşen
+    girdi_kutusu = st.text_area(
+        "Kiril Metin Girişi", 
+        value=st.session_state["stabil_metin"],
+        height=180,
+        key="kiril_yazi_alani_yeni",
+        label_visibility="collapsed"
+    )
+    
+    # El yazısıyla gelen değişikliği anında algıla ve hafızaya al
+    if girdi_kutusu != st.session_state["stabil_metin"]:
+        st.session_state["stabil_metin"] = girdi_kutusu
+
+    # İşlem Butonları
+    b1, b2, b3 = st.columns(3)
+    
+    with b1:
+        # DÖNÜŞTÜR BUTTON: Hafızadaki güncel metni alır ve sağdaki kutuyu doldurur
+        if st.button("Dönüştür", type="primary", use_container_width=True):
+            st.session_state["latin_cikti"] = transliterasyon_yap(st.session_state["stabil_metin"])
+            st.rerun()
+            
+    with b2:
+        if st.button("Temizle", use_container_width=True):
+            st.session_state["stabil_metin"] = ""
+            st.session_state["latin_cikti"] = ""
+            st.session_state["ses_oynatici"] = None
+            st.rerun()
+            
+    with b3:
+        if st.button("Sesle Oku (Kiril)", use_container_width=True):
+            if st.session_state["stabil_metin"].strip():
+                try:
+                    tts = gTTS(text=st.session_state["stabil_metin"], lang='ru', slow=False)
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    st.session_state["ses_oynatici"] = fp.getvalue()
+                except Exception as e:
+                    st.error("Ses sentezlenemedi.")
+            st.rerun()
+
+    # Sonuç Alanı Başlığı
+    st.write("Latin alfabesi sonucu:")
+    
+    # Çıktı Kutusu
+    st.text_area(
+        "",
+        value=st.session_state["latin_cikti"],
+        height=180,
+        disabled=True,
+        key="latin_cikti_alani_yeni",
+        label_visibility="collapsed"
+    )
+
+    # Ses oynatıcısı
+    if st.session_state["ses_oynatici"] is not None and st.session_state["stabil_metin"].strip():
+        st.audio(st.session_state["ses_oynatici"], format='audio/mp3')
+
+# Alt Bilgi
+st.write("---")
+st.caption("Not: Bu bir çeviri değil, Kiril harflerin-Latin alfabesine karşılıklarının yazdırılmasıdır.")
