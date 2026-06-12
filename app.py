@@ -5,17 +5,17 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
 
-# Tasarımı düzelten CSS: Sadece klavye içindeki butonları hedefler, kare yapar ve dikey/yatay ortalar
+# CSS: Sadece sol sütundaki klavye butonlarını kare yapar, sağdaki işlem butonlarına dokunmaz
 st.markdown("""
     <style>
-    /* Klavye buton kapsayıcısını sıkıştırır ve hizalar */
-    div[data-testid="stHorizontalBlock"] div[data-testid="column"] {
+    /* Sol sütundaki (sanal klavye) kolon boşluklarını daraltır */
+    [data-testid="stColumn"] [data-testid="stColumn"] {
         padding: 1px !important;
         margin: 0px !important;
     }
     
-    /* Butonları tam kare yapar ve harfleri merkeze kilitler */
-    div.stButton > button {
+    /* YALNIZCA sanal klavye butonlarını tam birer kare yapar ve harfi ortalar */
+    [data-testid="stColumn"] [data-testid="stColumn"] div.stButton > button {
         width: 100% !important;
         aspect-ratio: 1 / 1 !important;
         padding: 0px !important;
@@ -26,8 +26,8 @@ st.markdown("""
         font-size: 15px !important;
     }
     
-    /* Sağ taraftaki ana işlem butonlarının kare olmasını engeller, normal dikdörtgen bırakır */
-    div[data-testid="stHorizontalBlock"] button[id^="main_"] {
+    /* Sağ sütundaki ana işlem butonlarının (Dönüştür vb.) dev kare olmasını engeller, normal hizalar */
+    div.stButton > button[key^="main_"] {
         aspect-ratio: auto !important;
         height: 45px !important;
     }
@@ -63,7 +63,7 @@ if "latin_metin" not in st.session_state:
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
-# Sanal klavye basma fonksiyonu
+# Sanal klavye buton tetikleyicisi
 def harf_ekle(harf):
     st.session_state["kiril_metin_alani"] += harf
 
@@ -74,19 +74,18 @@ st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldak
 # --- İKİ SÜTUNLU ANA DÜZEN ---
 sol_sutun, sag_sutun = st.columns([1, 1.1])
 
-# --- SOL SÜTUN: SANAL KLAVYE ---
+# --- SOL SÜTUN: SANAL KLAVYE (TAM KARE) ---
 with sol_sutun:
     st.write("Kiril Alfabe - Alfabetik Sıra")
     
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
+        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "m"),
         ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
-        ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
+        ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ç"), ("Ш", "ş"), ("Щ", "щ"), ("Ъ", "ъ"),
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
     
-    # Her satıra tam 14 buton gelecek şekilde milimetrik yerleşim
     satir_genisligi = 7
     for i in range(0, len(kiril_harfleri), satir_genisligi):
         grup = kiril_harfleri[i:i+satir_genisligi]
@@ -101,19 +100,19 @@ with sol_sutun:
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
     
-    # Giriş Alanı: Hafıza hücresine doğrudan bağlandı
+    # Giriş Alanı
     giris_alani = st.text_area(
-        "",
+        label="Giriş Alanı",
         value=st.session_state["kiril_metin_alani"],
         height=180,
         key="kiril_girdisi",
         label_visibility="collapsed"
     )
     
-    # Manuel klavye girişlerini kaybetmemek için state'i senkronize tutuyoruz
+    # Hafızayı el ile yazılan metne göre güncel tutar
     st.session_state["kiril_metin_alani"] = giris_alani
 
-    # 3'lü Buton Sırası
+    # 3'lü Buton Sırası (Buradaki butonların key'leri CSS tarafından hedef alınmıştır)
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
@@ -143,9 +142,9 @@ with sag_sutun:
     # Sonuç Alanı Başlığı
     st.write("Latin alfabesi sonucu:")
     
-    # Çıktı Kutusu
+    # Çıktı Kutusu (Hediye harf sorunu tamamen temizlendi)
     st.text_area(
-        "",
+        label="Sonuç Alanı",
         value=st.session_state["latin_metin"],
         height=180,
         disabled=True,
