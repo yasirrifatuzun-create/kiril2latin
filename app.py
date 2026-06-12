@@ -5,7 +5,7 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
 
-# Sadece ve sadece harfleri buton kutusunun tam ortasına oturtan CSS
+# Harfleri buton kutusunun tam ortasına oturtan CSS
 st.markdown("""
     <style>
     div[data-testid="stColumn"] button p {
@@ -50,7 +50,7 @@ if "latin_metin" not in st.session_state:
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
-# Sanal klavye buton fonksiyonu
+# Butona basıldığında üstteki kutuya harf ekleyen fonksiyon
 def harf_ekle(harf):
     st.session_state["kiril_metin_alani"] += harf
 
@@ -68,7 +68,7 @@ with sol_sutun:
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
         ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
-        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
+        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "t"), ("У", "у"),
         ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
@@ -87,7 +87,7 @@ with sol_sutun:
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
     
-    # Giriş Alanı
+    # Giriş Alanı (st.session_state bağımlılığı ve tetikleyicisi kuruldu)
     giris_alani = st.text_area(
         label="Kiril Metin Girişi",
         value=st.session_state["kiril_metin_alani"],
@@ -95,8 +95,6 @@ with sag_sutun:
         key="kiril_girdisi",
         label_visibility="collapsed"
     )
-    
-    # Hafızayı senkronize tutar
     st.session_state["kiril_metin_alani"] = giris_alani
 
     # İşlem Butonları
@@ -104,7 +102,7 @@ with sag_sutun:
     
     with btn_col1:
         if st.button("Dönüştür", type="primary", use_container_width=True):
-            st.session_state["latin_metin"] = transliterasyon_yap(giris_alani)
+            st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_metin_alani"])
             st.rerun()
         
     with btn_col2:
@@ -116,9 +114,9 @@ with sag_sutun:
             
     with btn_col3:
         if st.button("Sesle Oku (Kiril)", use_container_width=True):
-            if giris_alani.strip():
+            if st.session_state["kiril_metin_alani"].strip():
                 try:
-                    tts_ru = gTTS(text=giris_alani, lang='ru', slow=False)
+                    tts_ru = gTTS(text=st.session_state["kiril_metin_alani"], lang='ru', slow=False)
                     fp_ru = io.BytesIO()
                     tts_ru.write_to_fp(fp_ru)
                     st.session_state["ses_dosyasi"] = fp_ru.getvalue()
