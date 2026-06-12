@@ -26,39 +26,24 @@ def transliterasyon_yap(metin):
         sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
     return sonuc
 
-# --- STREAMLIT MERKEZİ BELLEK AYARLARI ---
-if "kiril_yazi_kutusu" not in st.session_state:
-    st.session_state["kiril_yazi_kutusu"] = ""
-if "latin_metin" not in st.session_state:
-    st.session_state["latin_metin"] = ""
-if "ses_dosyasi" not in st.session_state:
-    st.session_state["ses_dosyasi"] = None
+# --- HAFIZA ALANLARI GİRİŞİ ---
+if "metin_deposu" not in st.session_state:
+    st.session_state["metin_deposu"] = ""
+if "latin_cikti" not in st.session_state:
+    st.session_state["latin_cikti"] = ""
+if "ses_deposu" not in st.session_state:
+    st.session_state["ses_deposu"] = None
 
-# --- CALLBACK FONKSİYONLARI ---
-def klavyeden_ekle(harf):
-    # Sanal klavye sadece metni ekler, ANLIK DÖNÜŞÜM YAPMAZ
-    st.session_state["kiril_yazi_kutusu"] += harf
-
-def temizle():
-    st.session_state["kiril_yazi_kutusu"] = ""
-    st.session_state["latin_metin"] = ""
-    st.session_state["ses_dosyasi"] = None
-
-def kesin_donustur():
-    # Dönüşüm sadece bu buton tetiklendiğinde gerçekleşir
-    st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_yazi_kutusu"])
-
-
-# Üst Başlık Alanı
+# Başlık Alanları
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
 st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
 
-# --- İKİ SÜTUNLU ANA DÜZEN ---
+# --- İKİ SÜTUNLU DÜZEN ---
 sol_sutun, sag_sutun = st.columns([1, 1.2])
 
 # --- SOL SÜTUN: SANAL KLAVYE ---
 with sol_sutun:
-    st.write("Kiril Alfabe - Alfabetik Sıra")
+    st.write("Kiril Alfabe - Sanal Klavye")
     
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
@@ -75,58 +60,72 @@ with sol_sutun:
         
         for idx, (buyuk, kucuk) in enumerate(grup):
             with klavye_cols[idx * 2]:
-                st.button(buyuk, key=f"b_{buyuk}_{i+idx}", use_container_width=True, on_click=klavyeden_ekle, args=(buyuk,))
+                if st.button(buyuk, key=f"b_{buyuk}_{i+idx}", use_container_width=True):
+                    st.session_state["metin_deposu"] += buyuk
+                    st.rerun()
             with klavye_cols[(idx * 2) + 1]:
-                st.button(kucuk, key=f"k_{kucuk}_{i+idx}", use_container_width=True, on_click=klavyeden_ekle, args=(kucuk,))
+                if st.button(kucuk, key=f"k_{kucuk}_{i+idx}", use_container_width=True):
+                    st.session_state["metin_deposu"] += kucuk
+                    st.rerun()
 
-# --- SAĞ SÜTUN: METİN GİRİŞİ VE DÖNÜŞTÜRME ---
+# --- SAĞ SÜTUN: KİLİTLENMEYEN METİN GİRİŞ / ÇIKIŞ ALANI ---
 with sag_sutun:
     
-    # Giriş Alanı (on_change kaldırıldı, harf eklendikçe veya yazıldıkçe otomatik dönüştürmez)
-    st.text_area(
+    # Girdi Alanı: Değeri doğrudan text_area widget'ının tetikleme gecikmesinden kurtarıyoruz
+    # Kullanıcı elle yazarsa anlık yakalamak için key kullanmıyoruz, değişkene atıyoruz
+    elle_yazilan = st.text_area(
         "",
+        value=st.session_state["metin_deposu"],
         height=180,
-        key="kiril_yazi_kutusu",
         label_visibility="collapsed"
     )
+    
+    # Kullanıcı klavyeden bir şey sildiğinde veya eklediğinde senkronize et
+    st.session_state["metin_deposu"] = elle_yazilan
 
-    # 3'lü Buton Sırası
+    # 3'lü Buton Sırası (Formsuz, bağımsız buton mimarisi)
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
-        # Butona basıldığı an kesin_donustur fonksiyonu çalışır ve ekrana yansır
-        st.button("Dönüştür", type="primary", use_container_width=True, on_click=kesin_donustur)
+        if st.button("Dönüştür", type="primary", use_container_width=True):
+            st.session_state["latin_cikti"] = transliterasyon_yap(st.session_state["metin_deposu"])
+            st.rerun()
         
     with btn_col2:
-        st.button("Temizle", use_container_width=True, on_click=temizle)
+        if st.button("Temizle", use_container_width=True):
+            st.session_state["metin_deposu"] = ""
+            st.session_state["latin_cikti"] = ""
+            st.session_state["ses_deposu"] = None
+            st.rerun()
             
     with btn_col3:
         if st.button("Sesle Oku (Kiril)", use_container_width=True):
-            if st.session_state["kiril_yazi_kutusu"].strip():
+            if st.session_state["metin_deposu"].strip():
                 try:
-                    tts_ru = gTTS(text=st.session_state["kiril_yazi_kutusu"], lang='ru', slow=False)
+                    tts_ru = gTTS(text=st.session_state["metin_deposu"], lang='ru', slow=False)
                     fp_ru = io.BytesIO()
                     tts_ru.write_to_fp(fp_ru)
-                    st.session_state["ses_dosyasi"] = fp_ru.getvalue()
+                    st.session_state["ses_deposu"] = fp_ru.getvalue()
                 except Exception as e:
                     st.error("Ses dosyası üretilemedi.")
+                st.rerun()
 
     # Sonuç Alanı Başlığı
     st.write("Latin alfabesi sonucu:")
     
-    # Çıktı Kutusu
+    # Çıktı Kutusu (Sadece nihai sonucu gösterir)
     st.text_area(
         "",
-        value=st.session_state["latin_metin"],
+        value=st.session_state["latin_cikti"],
         height=180,
         disabled=True,
-        key="latin_sonuc_kutusu",
+        key="latin_sonuc_gosterici",
         label_visibility="collapsed"
     )
 
     # Ses oynatıcısı
-    if st.session_state["ses_dosyasi"] is not None and st.session_state["kiril_yazi_kutusu"].strip():
-        st.audio(st.session_state["ses_dosyasi"], format='audio/mp3')
+    if st.session_state["ses_deposu"] is not None and st.session_state["metin_deposu"].strip():
+        st.audio(st.session_state["ses_deposu"], format='audio/mp3')
 
 # Alt Bilgi
 st.write("---")
