@@ -9,12 +9,13 @@ st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
 st.markdown("""
     <style>
     div.stButton > button {
-        display: inline-flex !important;
+        width: 100% !important;
+        height: 45px !important;
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        height: 45px !important;
         padding: 0px !important;
-        line-height: 45px !important;
+        font-size: 16px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -48,6 +49,10 @@ if "latin_metin" not in st.session_state:
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
+# Callback: Sanal klavyeden harf ekleme (Form kilidini aşar)
+def klavyeden_ekle(harf):
+    st.session_state["kiril_yazi_kutusu"] += harf
+
 # Üst Başlık Alanı
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
 st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
@@ -61,37 +66,29 @@ with sol_sutun:
     
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
+        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "m"),
         ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
-        ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
+        ("Ф", "f"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
     
-    satir_genisligi = 7
-    for i in range(0, len(kiril_harfleri), satir_genisligi):
-        grup = kiril_harfleri[i:i+satir_genisligi]
-        klavye_cols = st.columns(len(grup) * 2)
+    for i in range(0, len(kiril_harfleri), 7):
+        grup = kiril_harfleri[i:i+7]
+        klavye_cols = st.columns(14) # Her satırda tam 14 eşit sütun (Kutuları eşitler)
         
         for idx, (buyuk, kucuk) in enumerate(grup):
             with klavye_cols[idx * 2]:
-                # On_click çakışmasını engellemek için buton tetiklemesini doğrudan inline if ile yapıyoruz (Klavye kilidini açar)
-                if st.button(buyuk, key=f"b_{buyuk}_{i+idx}", use_container_width=True):
-                    st.session_state["kiril_metin"] += buyuk
-                    st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_metin"])
-                    st.rerun()
+                st.button(buyuk, key=f"btn_b_{buyuk}_{i}_{idx}", on_click=klavyeden_ekle, args=(buyuk,))
             with klavye_cols[(idx * 2) + 1]:
-                if st.button(kucuk, key=f"k_{kucuk}_{i+idx}", use_container_width=True):
-                    st.session_state["kiril_metin"] += kucuk
-                    st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_metin"])
-                    st.rerun()
+                st.button(kucuk, key=f"btn_k_{kucuk}_{i}_{idx}", on_click=klavyeden_ekle, args=(kucuk,))
 
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE BUTONLAR ---
 with sag_sutun:
     
-    # Giriş Alanı
-    giris_alani = st.text_area(
+    # Giriş Alanı: value parametresi kaldırıldı, sadece key ile session_state'e bağlandı.
+    # Bu sayede ne klavyeden basılan ne de elle yazılan metinler asla kaybolmaz.
+    st.text_area(
         "",
-        value=st.session_state["kiril_metin"],
         height=180,
         key="kiril_yazi_kutusu",
         label_visibility="collapsed"
@@ -101,25 +98,27 @@ with sag_sutun:
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
-        # Kesin Çözüm: Ekrandaki güncel yazıyı zorunlu olarak çeken buton mantığı
-        if st.button("Dönüştür", type="primary", use_container_width=True):
-            st.session_state["kiril_metin"] = giris_alani
-            st.session_state["latin_metin"] = transliterasyon_yap(giris_alani)
+        # Dönüştür Butonu
+        if st.button("Dönüştür", type="primary", use_container_width=True, key="main_donustur"):
+            metin = st.session_state["kiril_yazi_kutusu"]
+            st.session_state["latin_metin"] = transliterasyon_yap(metin)
             st.rerun()
         
     with btn_col2:
-        if st.button("Temizle", use_container_width=True):
-            st.session_state["kiril_metin"] = ""
+        # Temizle Butonu
+        if st.button("Temizle", use_container_width=True, key="main_temizle"):
+            st.session_state["kiril_yazi_kutusu"] = ""
             st.session_state["latin_metin"] = ""
             st.session_state["ses_dosyasi"] = None
             st.rerun()
             
     with btn_col3:
-        if st.button("Sesle Oku (Kiril)", use_container_width=True):
-            st.session_state["kiril_metin"] = giris_alani
-            if giris_alani.strip():
+        # Sesle Oku Butonu
+        if st.button("Sesle Oku (Kiril)", use_container_width=True, key="main_sesle_oku"):
+            metin = st.session_state["kiril_yazi_kutusu"]
+            if metin.strip():
                 try:
-                    tts_ru = gTTS(text=giris_alani, lang='ru', slow=False)
+                    tts_ru = gTTS(text=metin, lang='ru', slow=False)
                     fp_ru = io.BytesIO()
                     tts_ru.write_to_fp(fp_ru)
                     st.session_state["ses_dosyasi"] = fp_ru.getvalue()
@@ -141,7 +140,7 @@ with sag_sutun:
     )
 
     # Ses oynatıcısı
-    if st.session_state["ses_dosyasi"] is not None and st.session_state["kiril_metin"].strip():
+    if st.session_state["ses_dosyasi"] is not None and st.session_state["kiril_yazi_kutusu"].strip():
         st.audio(st.session_state["ses_dosyasi"], format='audio/mp3')
 
 # Alt Bilgi
