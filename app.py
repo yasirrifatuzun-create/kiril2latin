@@ -14,7 +14,7 @@ RUSCA_KIRIL_TABLO = {
     'Л': 'L', 'л': 'l', 'М': 'M', 'м': 'm', 'Н': 'N', 'н': 'n',
     'О': 'O', 'о': 'o', 'П': 'P', 'п': 'p', 'Р': 'R', 'р': 'r',
     'С': 'S', 'с': 's', 'Т': 'T', 'т': 't', 'У': 'U', 'у': 'u',
-    'Ф': 'F', 'f': 'f', 'Х': 'H', 'х': 'h', 'Ц': 'Ts', 'ц': 'ts',
+    'Ф': 'F', 'ф': 'f', 'Х': 'H', 'х': 'h', 'Ц': 'Ts', 'ц': 'ts',
     'Ч': 'Ç', 'ч': 'ç', 'Ш': 'Ş', 'ш': 'ş', 'Щ': 'Şç', 'щ': 'şç',
     'Ъ': "'", 'ъ': "'", 'Ы': 'I', 'ы': 'ı', 'Ь': "^", 'ь': "^",
     'Э': 'E', 'э': 'e', 'Ю': 'Yu', 'ю': 'yu', 'Я': 'Ya', 'я': 'ya'
@@ -27,7 +27,6 @@ def transliterasyon_yap(metin):
     return sonuc
 
 # --- STREAMLIT MERKEZİ BELLEK AYARLARI ---
-# text_area'nın 'key' değeri doğrudan session_state anahtarı olur.
 if "kiril_yazi_kutusu" not in st.session_state:
     st.session_state["kiril_yazi_kutusu"] = ""
 if "latin_metin" not in st.session_state:
@@ -35,24 +34,18 @@ if "latin_metin" not in st.session_state:
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
-# --- CALLBACK FONKSİYONLARI (KİLİTLENMEYİ ÖNLEYEN YAPI) ---
+# --- CALLBACK FONKSİYONLARI ---
 def klavyeden_ekle(harf):
-    # Sanal klavyeden harf ekler ve anında dönüştürür
+    # Sanal klavye sadece metni ekler, ANLIK DÖNÜŞÜM YAPMAZ
     st.session_state["kiril_yazi_kutusu"] += harf
-    st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_yazi_kutusu"])
-
-def elle_yazildi():
-    # Kullanıcı kutuya el ile yazıp bastığında tetiklenir
-    st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_yazi_kutusu"])
 
 def temizle():
-    # Tüm state alanlarını güvenli bir şekilde sıfırlar
     st.session_state["kiril_yazi_kutusu"] = ""
     st.session_state["latin_metin"] = ""
     st.session_state["ses_dosyasi"] = None
 
 def kesin_donustur():
-    # Dönüştür butonuna basıldığında tetiklenir
+    # Dönüşüm sadece bu buton tetiklendiğinde gerçekleşir
     st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_yazi_kutusu"])
 
 
@@ -69,7 +62,7 @@ with sol_sutun:
     
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "m"),
+        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
         ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
         ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
@@ -89,19 +82,19 @@ with sol_sutun:
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE DÖNÜŞTÜRME ---
 with sag_sutun:
     
-    # Giriş Alanı (on_change entegrasyonlu)
+    # Giriş Alanı (on_change kaldırıldı, harf eklendikçe veya yazıldıkçe otomatik dönüştürmez)
     st.text_area(
         "",
         height=180,
         key="kiril_yazi_kutusu",
-        label_visibility="collapsed",
-        on_change=elle_yazildi
+        label_visibility="collapsed"
     )
 
     # 3'lü Buton Sırası
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
+        # Butona basıldığı an kesin_donustur fonksiyonu çalışır ve ekrana yansır
         st.button("Dönüştür", type="primary", use_container_width=True, on_click=kesin_donustur)
         
     with btn_col2:
