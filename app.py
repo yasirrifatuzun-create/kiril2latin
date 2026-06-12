@@ -5,25 +5,20 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
 
-# Tasarımı düzelten kesin CSS: Butonları kapsül olmaktan kurtarır, net kare yapar ve harfi ortalar
-st.markdown("""
+# Sayfayı patlatmayan, sadece harfleri butonların tam ortasına sabitleyen temiz CSS
+st.html("""
     <style>
-    div.stButton > button {
+    button[data-testid="stBaseButton-secondary"], button[data-testid="stBaseButton-primary"] {
         width: 100% !important;
-        height: 40px !important;
+        height: 42px !important;
         padding: 0px !important;
-        display: inline-flex !important;
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         font-size: 15px !important;
     }
-    div[data-testid="column"] {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
     </style>
-""", unsafe_allow_html=True)
+""")
 
 # Orijinal Türkçe harf tablonuz
 RUSCA_KIRIL_TABLO = {
@@ -46,18 +41,17 @@ def transliterasyon_yap(metin):
         sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
     return sonuc
 
-# --- HAFIZA ALANLARI ---
-# StreamlitAPIException hatasını engellemek için metin girişini tetikleyen ana state yapısı
-if "klavye_girdisi" not in st.session_state:
-    st.session_state["klavye_girdisi"] = ""
-if "latin_sonuc" not in st.session_state:
-    st.session_state["latin_sonuc"] = ""
-if "ses_verisi" not in st.session_state:
-    st.session_state["ses_verisi"] = None
+# --- STREAMLIT MERKEZİ BELLEK AYARLARI ---
+if "kiril_yazi_kutusu" not in st.session_state:
+    st.session_state["kiril_yazi_kutusu"] = ""
+if "latin_metin" not in st.session_state:
+    st.session_state["latin_metin"] = ""
+if "ses_dosyasi" not in st.session_state:
+    st.session_state["ses_dosyasi"] = None
 
 # Sanal klavye butonlarının tetikleyeceği güvenli fonksiyon
 def harf_ekle(harf):
-    st.session_state["klavye_girdisi"] += harf
+    st.session_state["kiril_yazi_kutusu"] += harf
 
 # Üst Başlık Alanı
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
@@ -78,7 +72,73 @@ with sol_sutun:
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
     
-    # Her satıra tam 14 buton gelecek şekilde milimetrik yerleşim
-    for i in range(0, len(kiril_harfleri), 7):
-        grup = kiril_harfleri[i:i+7]
+    # 14 Eşit sütunlu tam kare simetrisi
+    satir_genisligi = 7
+    for i in range(0, len(kiril_harfleri), satir_genisligi):
+        grup = kiril_harfleri[i:i+satir_genisligi]
         klavye_cols = st.columns(14)
+        
+        for idx, (buyuk, kucuk) in enumerate(grup):
+            with klavye_cols[idx * 2]:
+                st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}", on_click=harf_ekle, args=(buyuk,))
+            with klavye_cols[(idx * 2) + 1]:
+                st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}", on_click=harf_ekle, args=(kucuk,))
+
+# --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
+with sag_sutun:
+    
+    # Giriş Alanı: Hafıza hücresine doğrudan bağlandı
+    giris_alani = st.text_area(
+        "",
+        key="kiril_yazi_kutusu",
+        height=180,
+        label_visibility="collapsed"
+    )
+
+    # 3'lü Buton Sırası
+    btn_col1, btn_col2, btn_col3 = st.columns(3)
+    
+    with btn_col1:
+        if st.button("Dönüştür", type="primary", use_container_width=True, key="main_donustur"):
+            st.session_state["latin_metin"] = transliterasyon_yap(giris_alani)
+            st.rerun()
+        
+    with btn_col2:
+        if st.button("Temizle", use_container_width=True, key="main_temizle"):
+            st.session_state["kiril_yazi_kutusu"] = ""
+            st.session_state["latin_metin"] = ""
+            st.session_state["ses_dosyasi"] = None
+            st.rerun()
+            
+    with btn_col3:
+        if st.button("Sesle Oku (Kiril)", use_container_width=True, key="main_sesle_oku"):
+            if giris_alani.strip():
+                try:
+                    tts_ru = gTTS(text=giris_alani, lang='ru', slow=False)
+                    fp_ru = io.BytesIO()
+                    tts_ru.write_to_fp(fp_ru)
+                    st.session_state["ses_dosyasi"] = fp_ru.getvalue()
+                except Exception as e:
+                    st.error("Ses dosyası üretilemedi.")
+                st.rerun()
+
+    # Sonuç Alanı Başlığı
+    st.write("Latin alfabesi sonucu:")
+    
+    # Çıktı Kutusu
+    st.text_area(
+        "",
+        value=st.session_state["latin_metin"],
+        height=180,
+        disabled=True,
+        key="latin_sonuc_kutusu",
+        label_visibility="collapsed"
+    )
+
+    # Ses oynatıcısı
+    if st.session_state["ses_dosyasi"] is not None and st.session_state["kiril_yazi_kutusu"].strip():
+        st.audio(st.session_state["ses_dosyasi"], format='audio/mp3')
+
+# Alt Bilgi
+st.write("---")
+st.caption("Not: Bu bir çeviri değil, Kiril harflerin-Latin alfabesine karşılıklarının yazdırılmasıdır.")
