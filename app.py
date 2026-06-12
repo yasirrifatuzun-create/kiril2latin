@@ -5,6 +5,18 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
 
+# Sadece harfleri dikey ve yatay olarak butonun tam ortasına alan CSS
+st.markdown("""
+    <style>
+    div[data-testid="stColumn"] button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Orijinal Transliterasyon Harf Tablosu
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
@@ -49,7 +61,6 @@ sol_sutun, sag_sutun = st.columns([1, 1.1])
 with sol_sutun:
     st.write("Kiril Alfabe - Alfabetik Sıra")
     
-    # Harflerin tamamı orijinal Kiril karakterlerine döndürüldü
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
         ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
