@@ -50,10 +50,9 @@ if "latin_metin" not in st.session_state:
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
-# Butona basıldığında harfi ekler ve arayüzü anında günceller
+# Butona basıldığında harfi ekler (Callback fonksiyonu otomatik yenileme yapar)
 def harf_ekle(harf):
     st.session_state["kiril_metin_alani"] += harf
-    st.rerun()
 
 # Üst Başlık Alanı
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
