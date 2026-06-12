@@ -43,12 +43,34 @@ def transliterasyon_yap(metin):
     return sonuc
 
 # --- STREAMLIT MERKEZİ BELLEK AYARLARI ---
-if "kiril_metin_alani" not in st.session_state:
-    st.session_state["kiril_metin_alani"] = ""
+if "kiril_girdisi" not in st.session_state:
+    st.session_state["kiril_girdisi"] = ""
 if "latin_metin" not in st.session_state:
     st.session_state["latin_metin"] = ""
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
+
+# Callback Fonksiyonları (Hata vermeden anlık güncellemeyi sağlar)
+def harf_ekle(harf):
+    st.session_state["kiril_girdisi"] += harf
+
+def temizle_islemi():
+    st.session_state["kiril_girdisi"] = ""
+    st.session_state["latin_metin"] = ""
+    st.session_state["ses_dosyasi"] = None
+
+def donustur_islemi():
+    st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_girdisi"])
+
+def ses_oku_islemi():
+    if st.session_state["kiril_girdisi"].strip():
+        try:
+            tts_ru = gTTS(text=st.session_state["kiril_girdisi"], lang='ru', slow=False)
+            fp_ru = io.BytesIO()
+            tts_ru.write_to_fp(fp_ru)
+            st.session_state["ses_dosyasi"] = fp_ru.getvalue()
+        except:
+            pass
 
 # Üst Başlık Alanı
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
@@ -76,52 +98,32 @@ with sol_sutun:
         
         for idx, (buyuk, kucuk) in enumerate(grup):
             with klavye_cols[idx * 2]:
-                if st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}"):
-                    st.session_state["kiril_metin_alani"] += buyuk
-                    st.rerun()
+                st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}", on_click=harf_ekle, args=(buyuk,))
             with klavye_cols[(idx * 2) + 1]:
-                if st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}"):
-                    st.session_state["kiril_metin_alani"] += kucuk
-                    st.rerun()
+                st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}", on_click=harf_ekle, args=(kucuk,))
 
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
     
-    # Giriş Alanı - st.text_area değerini doğrudan session_state'e eşitledik
-    giris_alani = st.text_area(
+    # Giriş Alanı (Doğrudan state anahtarına bağlı)
+    st.text_area(
         label="Kiril Metin Girişi",
         height=180,
-        key="kiril_metin_alani",
+        key="kiril_girdisi",
         label_visibility="collapsed"
     )
 
-    # İşlem Butonları
+    # İşlem Butonları (Callback ile kilitlenme tamamen önlendi)
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
-        if st.button("Dönüştür", type="primary", use_container_width=True):
-            st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_metin_alani"])
-            st.rerun()
+        st.button("Dönüştür", type="primary", use_container_width=True, on_click=donustur_islemi)
         
     with btn_col2:
-        if st.button("Temizle", use_container_width=True):
-            # Doğrudan tek bir merkezi anahtarı sıfırlayarak çakışmayı önledik
-            st.session_state["kiril_metin_alani"] = ""
-            st.session_state["latin_metin"] = ""
-            st.session_state["ses_dosyasi"] = None
-            st.rerun()
+        st.button("Temizle", use_container_width=True, on_click=temizle_islemi)
             
     with btn_col3:
-        if st.button("Sesle Oku (Kiril)", use_container_width=True):
-            if st.session_state["kiril_metin_alani"].strip():
-                try:
-                    tts_ru = gTTS(text=st.session_state["kiril_metin_alani"], lang='ru', slow=False)
-                    fp_ru = io.BytesIO()
-                    tts_ru.write_to_fp(fp_ru)
-                    st.session_state["ses_dosyasi"] = fp_ru.getvalue()
-                except:
-                    st.error("Ses dosyası üretilemedi.")
-                st.rerun()
+        st.button("Sesle Oku (Kiril)", use_container_width=True, on_click=ses_oku_islemi)
 
     # Sonuç Alanı
     st.write("Latin alfabesi sonucu:")
@@ -135,7 +137,7 @@ with sag_sutun:
     )
 
     # Ses Oynatıcı
-    if st.session_state["ses_dosyasi"] is not None and st.session_state["kiril_metin_alani"].strip():
+    if st.session_state["ses_dosyasi"] is not None and st.session_state["kiril_girdisi"].strip():
         st.audio(st.session_state["ses_dosyasi"], format='audio/mp3')
 
 st.write("---")
