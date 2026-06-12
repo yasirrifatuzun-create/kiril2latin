@@ -5,13 +5,17 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
 
-# Sadece harfleri dikey ve yatay olarak butonun tam ortasına alan CSS
+# Sadece ve sadece harfleri buton kutusunun tam ortasına oturtan CSS
 st.markdown("""
     <style>
-    div[data-testid="stColumn"] button {
-        display: inline-flex !important;
+    div[data-testid="stColumn"] button p {
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0px !important;
+        padding: 0px !important;
         text-align: center !important;
     }
     </style>
