@@ -5,6 +5,35 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
 
+# Tasarımı düzelten CSS: Sadece klavye içindeki butonları hedefler, kare yapar ve dikey/yatay ortalar
+st.markdown("""
+    <style>
+    /* Klavye buton kapsayıcısını sıkıştırır ve hizalar */
+    div[data-testid="stHorizontalBlock"] div[data-testid="column"] {
+        padding: 1px !important;
+        margin: 0px !important;
+    }
+    
+    /* Butonları tam kare yapar ve harfleri merkeze kilitler */
+    div.stButton > button {
+        width: 100% !important;
+        aspect-ratio: 1 / 1 !important;
+        padding: 0px !important;
+        margin: 0px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 15px !important;
+    }
+    
+    /* Sağ taraftaki ana işlem butonlarının kare olmasını engeller, normal dikdörtgen bırakır */
+    div[data-testid="stHorizontalBlock"] button[id^="main_"] {
+        aspect-ratio: auto !important;
+        height: 45px !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Orijinal Türkçe harf tablonuz
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
@@ -27,113 +56,80 @@ def transliterasyon_yap(metin):
     return sonuc
 
 # --- STREAMLIT MERKEZİ BELLEK AYARLARI ---
-if "kiril_yazi_kutusu" not in st.session_state:
-    st.session_state["kiril_yazi_kutusu"] = ""
+if "kiril_metin_alani" not in st.session_state:
+    st.session_state["kiril_metin_alani"] = ""
 if "latin_metin" not in st.session_state:
     st.session_state["latin_metin"] = ""
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
-# HTML Klavyeden gelen tıklamaları yakalayan mekanizma
-query_params = st.query_params
-if "ekle_harf" in query_params:
-    st.session_state["kiril_yazi_kutusu"] += query_params["ekle_harf"]
-    st.query_params.clear()
-    st.rerun()
+# Sanal klavye basma fonksiyonu
+def harf_ekle(harf):
+    st.session_state["kiril_metin_alani"] += harf
 
 # Üst Başlık Alanı
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
 st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
 
 # --- İKİ SÜTUNLU ANA DÜZEN ---
-sol_sutun, sag_sutun = st.columns([1, 1.2])
+sol_sutun, sag_sutun = st.columns([1, 1.1])
 
-# --- SOL SÜTUN: KUSURSUZ KARE SANAL KLAVYE ---
+# --- SOL SÜTUN: SANAL KLAVYE ---
 with sol_sutun:
     st.write("Kiril Alfabe - Alfabetik Sıra")
     
-    # Harf listesi
     kiril_harfleri = [
-        "А", "а", "Б", "б", "В", "в", "Г", "г", "Д", "д", "Е", "е", "Ё", "ё",
-        "Ж", "ж", "З", "з", "И", "и", "Й", "й", "К", "к", "Л", "л", "М", "м",
-        "Н", "н", "О", "о", "П", "п", "Р", "р", "С", "с", "Т", "т", "У", "у",
-        "Ф", "ф", "Х", "х", "Ц", "ц", "Ч", "ç", "Ш", "ş", "Щ", "щ", "Ъ", "ъ",
-        "Ы", "ы", "Ь", "ь", "Э", "э", "Ю", "ю", "Я", "я"
+        ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
+        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
+        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
+        ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
+        ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
     
-    # Butonları milimetrik kare yapan, harfleri tam ortalayan HTML Grid Yapısı
-    klavye_html = """
-    <style>
-    .grid-container {
-        display: grid;
-        grid-template-columns: repeat(14, 1fr);
-        gap: 6px;
-        background-color: transparent;
-        padding: 5px 0px;
-    }
-    .grid-item {
-        background-color: #262730;
-        color: #ffffff;
-        border: 1px solid #464855;
-        border-radius: 4px;
-        aspect-ratio: 1 / 1; /* Kesin kare olmasını zorunlu kılar */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: background-color 0.1s, border-color 0.1s;
-    }
-    .grid-item:hover {
-        background-color: #31333F;
-        border-color: #ff4b4b;
-    }
-    .grid-item:active {
-        background-color: #ff4b4b;
-        color: white;
-    }
-    </style>
-    <div class="grid-container">
-    """
-    
-    for harf in kiril_harfleri:
-        klavye_html += f'<a href="?ekle_harf={harf}" target="_self" class="grid-item">{harf}</a>'
-    
-    klavye_html += "</div>"
-    st.components.v1.html(klavye_html, height=280, scrolling=False)
+    # Her satıra tam 14 buton gelecek şekilde milimetrik yerleşim
+    satir_genisligi = 7
+    for i in range(0, len(kiril_harfleri), satir_genisligi):
+        grup = kiril_harfleri[i:i+satir_genisligi]
+        klavye_cols = st.columns(14)
+        
+        for idx, (buyuk, kucuk) in enumerate(grup):
+            with klavye_cols[idx * 2]:
+                st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}", on_click=harf_ekle, args=(buyuk,))
+            with klavye_cols[(idx * 2) + 1]:
+                st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}", on_click=harf_ekle, args=(kucuk,))
 
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
     
-    # Giriş Alanı: Doğrudan hafıza hücresine bağlıdır, asla sıfırlanmaz veya takılmaz
+    # Giriş Alanı: Hafıza hücresine doğrudan bağlandı
     giris_alani = st.text_area(
         "",
-        value=st.session_state["kiril_yazi_kutusu"],
+        value=st.session_state["kiril_metin_alani"],
         height=180,
-        key="kiril_yazi_kutusu_ana",
+        key="kiril_girdisi",
         label_visibility="collapsed"
     )
+    
+    # Manuel klavye girişlerini kaybetmemek için state'i senkronize tutuyoruz
+    st.session_state["kiril_metin_alani"] = giris_alani
 
-    # 3'lü İşlem Butonları
+    # 3'lü Buton Sırası
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
-        if st.button("Dönüştür", type="primary", use_container_width=True):
-            st.session_state["kiril_yazi_kutusu"] = giris_alani
+        if st.button("Dönüştür", type="primary", use_container_width=True, key="main_donustur"):
             st.session_state["latin_metin"] = transliterasyon_yap(giris_alani)
             st.rerun()
         
     with btn_col2:
-        if st.button("Temizle", use_container_width=True):
-            st.session_state["kiril_yazi_kutusu"] = ""
+        if st.button("Temizle", use_container_width=True, key="main_temizle"):
+            st.session_state["kiril_metin_alani"] = ""
             st.session_state["latin_metin"] = ""
             st.session_state["ses_dosyasi"] = None
             st.rerun()
             
     with btn_col3:
-        if st.button("Sesle Oku (Kiril)", use_container_width=True):
-            st.session_state["kiril_yazi_kutusu"] = giris_alani
+        if st.button("Sesle Oku (Kiril)", use_container_width=True, key="main_sesle_oku"):
             if giris_alani.strip():
                 try:
                     tts_ru = gTTS(text=giris_alani, lang='ru', slow=False)
@@ -158,7 +154,7 @@ with sag_sutun:
     )
 
     # Ses oynatıcısı
-    if st.session_state["ses_dosyasi"] is not None and st.session_state["kiril_yazi_kutusu"].strip():
+    if st.session_state["ses_dosyasi"] is not None and st.session_state["kiril_metin_alani"].strip():
         st.audio(st.session_state["ses_dosyasi"], format='audio/mp3')
 
 # Alt Bilgi
