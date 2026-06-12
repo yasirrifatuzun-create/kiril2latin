@@ -63,8 +63,8 @@ with sol_sutun:
     
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
-        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
+        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "m"),
+        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "t"), ("У", "у"),
         ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
@@ -77,31 +77,23 @@ with sol_sutun:
         for idx, (buyuk, kucuk) in enumerate(grup):
             with klavye_cols[idx * 2]:
                 if st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}"):
-                    # Doğrudan text_area'nın bağlı olduğu widget hafızasına ekleme yapıyoruz
-                    if "kiril_girdisi" in st.session_state:
-                        st.session_state["kiril_girdisi"] += buyuk
                     st.session_state["kiril_metin_alani"] += buyuk
                     st.rerun()
             with klavye_cols[(idx * 2) + 1]:
                 if st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}"):
-                    if "kiril_girdisi" in st.session_state:
-                        st.session_state["kiril_girdisi"] += kucuk
                     st.session_state["kiril_metin_alani"] += kucuk
                     st.rerun()
 
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
     
-    # Giriş Alanı - Değeri doğrudan kendi key'i üzerinden yönetiyoruz
+    # Giriş Alanı - st.text_area değerini doğrudan session_state'e eşitledik
     giris_alani = st.text_area(
         label="Kiril Metin Girişi",
         height=180,
-        key="kiril_girdisi",
-        value=st.session_state["kiril_metin_alani"],
+        key="kiril_metin_alani",
         label_visibility="collapsed"
     )
-    # Klavyeden elle yazılan metni de yedek hafızada tutuyoruz
-    st.session_state["kiril_metin_alani"] = giris_alani
 
     # İşlem Butonları
     btn_col1, btn_col2, btn_col3 = st.columns(3)
@@ -113,8 +105,8 @@ with sag_sutun:
         
     with btn_col2:
         if st.button("Temizle", use_container_width=True):
+            # Doğrudan tek bir merkezi anahtarı sıfırlayarak çakışmayı önledik
             st.session_state["kiril_metin_alani"] = ""
-            st.session_state["kiril_girdisi"] = ""
             st.session_state["latin_metin"] = ""
             st.session_state["ses_dosyasi"] = None
             st.rerun()
