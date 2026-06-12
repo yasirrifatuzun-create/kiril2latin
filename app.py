@@ -50,9 +50,10 @@ if "latin_metin" not in st.session_state:
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
-# Butona basıldığında üstteki kutuya harf ekleyen fonksiyon
+# Butona basıldığında harfi ekler ve arayüzü anında günceller
 def harf_ekle(harf):
     st.session_state["kiril_metin_alani"] += harf
+    st.rerun()
 
 # Üst Başlık Alanı
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
@@ -87,7 +88,7 @@ with sol_sutun:
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
     
-    # Giriş Alanı (st.session_state bağımlılığı ve tetikleyicisi kuruldu)
+    # Giriş Alanı
     giris_alani = st.text_area(
         label="Kiril Metin Girişi",
         value=st.session_state["kiril_metin_alani"],
