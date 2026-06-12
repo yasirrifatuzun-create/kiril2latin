@@ -50,10 +50,6 @@ if "latin_metin" not in st.session_state:
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
-# Butona basıldığında harfi ekler (Callback fonksiyonu otomatik yenileme yapar)
-def harf_ekle(harf):
-    st.session_state["kiril_metin_alani"] += harf
-
 # Üst Başlık Alanı
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
 st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
@@ -67,7 +63,7 @@ with sol_sutun:
     
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
+        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "l"), ("М", "m"),
         ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "t"), ("У", "у"),
         ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
@@ -80,9 +76,13 @@ with sol_sutun:
         
         for idx, (buyuk, kucuk) in enumerate(grup):
             with klavye_cols[idx * 2]:
-                st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}", on_click=harf_ekle, args=(buyuk,))
+                if st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}"):
+                    st.session_state["kiril_metin_alani"] += buyuk
+                    st.rerun()
             with klavye_cols[(idx * 2) + 1]:
-                st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}", on_click=harf_ekle, args=(kucuk,))
+                if st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}"):
+                    st.session_state["kiril_metin_alani"] += kucuk
+                    st.rerun()
 
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
