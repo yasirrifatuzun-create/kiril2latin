@@ -26,7 +26,7 @@ def transliterasyon_yap(metin):
         sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
     return sonuc
 
-# --- HAFIZA ALANLARI ---
+# --- HAFIZA ALANLARI GİRİŞİ ---
 if "metin_deposu" not in st.session_state:
     st.session_state["metin_deposu"] = ""
 if "latin_cikti" not in st.session_state:
@@ -34,11 +34,11 @@ if "latin_cikti" not in st.session_state:
 if "ses_deposu" not in st.session_state:
     st.session_state["ses_deposu"] = None
 
-# Üst Başlık Alanı
+# Başlık Alanları
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
 st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
 
-# --- İKİ SÜTUNLU ANA DÜZEN ---
+# --- İKİ SÜTUNLU DÜZEN ---
 sol_sutun, sag_sutun = st.columns([1, 1.2])
 
 # --- SOL SÜTUN: SANAL KLAVYE ---
@@ -47,7 +47,7 @@ with sol_sutun:
     
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "m"),
+        ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
         ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
         ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
@@ -60,7 +60,6 @@ with sol_sutun:
         
         for idx, (buyuk, kucuk) in enumerate(grup):
             with klavye_cols[idx * 2]:
-                # On_click yerine doğrudan if kontrolü ve rerun ile kilitlenmeyi önlüyoruz
                 if st.button(buyuk, key=f"b_{buyuk}_{i+idx}", use_container_width=True):
                     st.session_state["metin_deposu"] += buyuk
                     st.rerun()
@@ -69,25 +68,27 @@ with sol_sutun:
                     st.session_state["metin_deposu"] += kucuk
                     st.rerun()
 
-# --- SAĞ SÜTUN: METİN GİRİŞİ VE KESİN DÖNÜŞTÜRME ---
+# --- SAĞ SÜTUN: KİLİTLENMEYEN METİN GİRİŞ / ÇIKIŞ ALANI ---
 with sag_sutun:
     
-    # Kilitlenmeyi önlemek için key ataması yapmadan doğrudan value eşlemesi yapıyoruz
-    giris_alani = st.text_area(
+    # Girdi Alanı: Değeri doğrudan text_area widget'ının tetikleme gecikmesinden kurtarıyoruz
+    # Kullanıcı elle yazarsa anlık yakalamak için key kullanmıyoruz, değişkene atıyoruz
+    elle_yazilan = st.text_area(
         "",
         value=st.session_state["metin_deposu"],
         height=180,
         label_visibility="collapsed"
     )
+    
+    # Kullanıcı klavyeden bir şey sildiğinde veya eklediğinde senkronize et
+    st.session_state["metin_deposu"] = elle_yazilan
 
-    # 3'lü Buton Sırası
+    # 3'lü Buton Sırası (Formsuz, bağımsız buton mimarisi)
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
         if st.button("Dönüştür", type="primary", use_container_width=True):
-            # Tarayıcı/Sunucu gecikmesini aşmak için doğrudan o anki giris_alani değişkenini okuyoruz
-            st.session_state["metin_deposu"] = giris_alani
-            st.session_state["latin_cikti"] = transliterasyon_yap(giris_alani)
+            st.session_state["latin_cikti"] = transliterasyon_yap(st.session_state["metin_deposu"])
             st.rerun()
         
     with btn_col2:
@@ -99,11 +100,9 @@ with sag_sutun:
             
     with btn_col3:
         if st.button("Sesle Oku (Kiril)", use_container_width=True):
-            # Butona basıldığı an kutuda ne yazıyorsa onu temel alıyoruz
-            st.session_state["metin_deposu"] = giris_alani
-            if giris_alani.strip():
+            if st.session_state["metin_deposu"].strip():
                 try:
-                    tts_ru = gTTS(text=giris_alani, lang='ru', slow=False)
+                    tts_ru = gTTS(text=st.session_state["metin_deposu"], lang='ru', slow=False)
                     fp_ru = io.BytesIO()
                     tts_ru.write_to_fp(fp_ru)
                     st.session_state["ses_deposu"] = fp_ru.getvalue()
@@ -114,13 +113,13 @@ with sag_sutun:
     # Sonuç Alanı Başlığı
     st.write("Latin alfabesi sonucu:")
     
-    # Çıktı Kutusu
+    # Çıktı Kutusu (Sadece nihai sonucu gösterir)
     st.text_area(
         "",
         value=st.session_state["latin_cikti"],
         height=180,
         disabled=True,
-        key="latin_sonuc_kutusu",
+        key="latin_sonuc_gosterici",
         label_visibility="collapsed"
     )
 
