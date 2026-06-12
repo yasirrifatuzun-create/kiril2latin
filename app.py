@@ -50,28 +50,6 @@ if "latin_metin" not in st.session_state:
 if "ses_dosyasi" not in st.session_state:
     st.session_state["ses_dosyasi"] = None
 
-# Callback Fonksiyonları (Hata vermeden anlık güncellemeyi sağlar)
-def harf_ekle(harf):
-    st.session_state["kiril_girdisi"] += harf
-
-def temizle_islemi():
-    st.session_state["kiril_girdisi"] = ""
-    st.session_state["latin_metin"] = ""
-    st.session_state["ses_dosyasi"] = None
-
-def donustur_islemi():
-    st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_girdisi"])
-
-def ses_oku_islemi():
-    if st.session_state["kiril_girdisi"].strip():
-        try:
-            tts_ru = gTTS(text=st.session_state["kiril_girdisi"], lang='ru', slow=False)
-            fp_ru = io.BytesIO()
-            tts_ru.write_to_fp(fp_ru)
-            st.session_state["ses_dosyasi"] = fp_ru.getvalue()
-        except:
-            pass
-
 # Üst Başlık Alanı
 st.title("KIRIL2LATIN - Transliterasyon Uygulaması")
 st.caption("Kiril harfli metni sağdaki kutuya yazın/yapıştırın veya soldaki sanal klavyeyi kullanın.")
@@ -86,7 +64,7 @@ with sol_sutun:
     kiril_harfleri = [
         ("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
         ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "m"),
-        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "t"), ("У", "у"),
+        ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
         ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
         ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")
     ]
@@ -98,32 +76,54 @@ with sol_sutun:
         
         for idx, (buyuk, kucuk) in enumerate(grup):
             with klavye_cols[idx * 2]:
-                st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}", on_click=harf_ekle, args=(buyuk,))
+                if st.button(buyuk, key=f"k_b_{buyuk}_{i}_{idx}"):
+                    st.session_state["kiril_girdisi"] += buyuk
+                    st.rerun()
             with klavye_cols[(idx * 2) + 1]:
-                st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}", on_click=harf_ekle, args=(kucuk,))
+                if st.button(kucuk, key=f"k_k_{kucuk}_{i}_{idx}"):
+                    st.session_state["kiril_girdisi"] += kucuk
+                    st.rerun()
 
 # --- SAĞ SÜTUN: METİN GİRİŞİ VE İŞLEMLER ---
 with sag_sutun:
     
-    # Giriş Alanı (Doğrudan state anahtarına bağlı)
-    st.text_area(
+    # Giriş Alanı
+    giris_alani = st.text_area(
         label="Kiril Metin Girişi",
         height=180,
-        key="kiril_girdisi",
+        value=st.session_state["kiril_girdisi"],
+        key="kiril_metin_kutusu",
         label_visibility="collapsed"
     )
+    # Klavyeden elle yazılan veriyi anlık senkronize et
+    st.session_state["kiril_girdisi"] = giris_alani
 
-    # İşlem Butonları (Callback ile kilitlenme tamamen önlendi)
+    # İşlem Butonları
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
-        st.button("Dönüştür", type="primary", use_container_width=True, on_click=donustur_islemi)
+        if st.button("Dönüştür", type="primary", use_container_width=True):
+            st.session_state["latin_metin"] = transliterasyon_yap(st.session_state["kiril_girdisi"])
+            st.rerun()
         
     with btn_col2:
-        st.button("Temizle", use_container_width=True, on_click=temizle_islemi)
+        if st.button("Temizle", use_container_width=True):
+            st.session_state["kiril_girdisi"] = ""
+            st.session_state["latin_metin"] = ""
+            st.session_state["ses_dosyasi"] = None
+            st.rerun()
             
     with btn_col3:
-        st.button("Sesle Oku (Kiril)", use_container_width=True, on_click=ses_oku_islemi)
+        if st.button("Sesle Oku (Kiril)", use_container_width=True):
+            if st.session_state["kiril_girdisi"].strip():
+                try:
+                    tts_ru = gTTS(text=st.session_state["kiril_girdisi"], lang='ru', slow=False)
+                    fp_ru = io.BytesIO()
+                    tts_ru.write_to_fp(fp_ru)
+                    st.session_state["ses_dosyasi"] = fp_ru.getvalue()
+                except:
+                    pass
+                st.rerun()
 
     # Sonuç Alanı
     st.write("Latin alfabesi sonucu:")
