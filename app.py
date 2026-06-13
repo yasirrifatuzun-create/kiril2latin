@@ -2,24 +2,25 @@ import streamlit as st
 from gtts import gTTS
 import io
 
-# Sayfa ayarları en üstte
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Hiçbir girinti yapmadan, en sola yaslı şekilde ekliyoruz
+# BU BLOĞU EN BAŞA, HİÇBİR ŞEYİN İÇİNE GİRMEDEN YAPIŞTIR.
+# BAŞINDA HİÇBİR BOŞLUK OLMADIĞINDAN EMİN OL.
 st.markdown("""
 <style>
-/* Butonları sabitle */
 div[data-testid="stColumn"] button {
     width: 40px !important;
     height: 40px !important;
     min-width: 40px !important;
     padding: 0 !important;
-    margin: 2px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Harf Tablosu
+# --- Kodun kalanı ---
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
@@ -37,7 +38,6 @@ RUSCA_KIRIL_TABLO = {
 def transliterasyon_yap(metin):
     return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
-# Session state kontrolü
 if "girdi" not in st.session_state: st.session_state["girdi"] = ""
 if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
@@ -53,14 +53,13 @@ with col1:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    # 7 sütunlu ızgara
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
-            if row[j*2].button(b, key=f"btn_b_{i}_{j}"):
+            if row[j*2].button(b, key=f"b_{i}_{j}"):
                 st.session_state["girdi"] += b
                 st.rerun()
-            if row[j*2+1].button(k, key=f"btn_k_{i}_{j}"):
+            if row[j*2+1].button(k, key=f"k_{i}_{j}"):
                 st.session_state["girdi"] += k
                 st.rerun()
 
