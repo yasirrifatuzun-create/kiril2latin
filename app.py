@@ -4,35 +4,35 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Klavye kare, İşlem butonları dikdörtgen
+# CSS: Harf butonları KARE, İşlem butonları DİKDÖRTGEN
 st.markdown("""
 <style>
-/* 1. Klavye harf butonları: Küçük ve kare */
-div.stButton > button {
+/* 1. Harf Butonları: Sadece kare yapı, küçük */
+div[data-testid="column"] > div > div > div > div > button {
     width: 32px !important;
     height: 32px !important;
     padding: 0 !important;
     margin: 1px 4px 1px 1px !important;
     font-size: 12px !important;
+    border-radius: 4px !important;
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
-    border-radius: 4px !important;
 }
 
-/* 2. İşlem butonları: Dikdörtgen ve metin kırmayan yapı */
-/* Sadece ana sütundaki işlem butonlarını hedefliyoruz */
-div[data-testid="column"] button {
+/* 2. İşlem Butonları (Dönüştür, Temizle, Sesle Oku): Dikdörtgen yapı */
+/* Butonları içeren sütunlardaki özel yapı */
+div[data-testid="column"] button:not(:has(div)) {
     width: 140px !important;
     height: 45px !important;
-    white-space: nowrap !important;
     font-size: 14px !important;
     padding: 0 10px !important;
+    margin-top: 10px !important;
+    border-radius: 5px !important;
+    white-space: nowrap !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border-radius: 5px !important;
-    margin-top: 10px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -70,7 +70,6 @@ with col_left:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    # Harf butonları için düzen
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
@@ -84,7 +83,7 @@ with col_left:
 with col_right:
     st.session_state["girdi"] = st.text_area("Kiril Metin:", value=st.session_state["girdi"], height=100)
     
-    # İşlem butonları
+    # İşlem butonları (Dikdörtgen)
     c1, c2, c3 = st.columns(3)
     if c1.button("Dönüştür"):
         st.session_state["sonuc"] = transliterasyon_yap(st.session_state["girdi"])
