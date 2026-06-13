@@ -5,6 +5,7 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
+# CSS: Butonları tam kare (45x45px) yapar ve içeriği mükemmel ortalar
 st.markdown("""
 <style>
 /* Buton boyutlarını sabitliyoruz (kare yapı) */
@@ -29,6 +30,7 @@ div[data-testid="stColumn"] button p {
 }
 </style>
 """, unsafe_allow_html=True)
+
 # Harf Tablosu
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
@@ -65,6 +67,7 @@ with col1:
                ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
+    
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
@@ -76,6 +79,7 @@ with col1:
                 st.rerun()
 
 with col2:
+    # Metin alanı doğrudan session_state ile bağlı
     yeni_girdi = st.text_area("Kiril Metin:", value=st.session_state["girdi_metni"], height=150)
     st.session_state["girdi_metni"] = yeni_girdi
 
@@ -94,5 +98,5 @@ with col2:
             tts.write_to_fp(fp)
             st.audio(fp.getvalue(), format='audio/mp3')
 
-    # Kopyalanabilir olması için disabled=False (veya varsayılan) tutuyoruz
+    # Sonuç alanı kopyalanabilir
     st.text_area("Latin Sonucu:", value=st.session_state["sonuc_metni"], height=150)
