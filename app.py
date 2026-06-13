@@ -5,23 +5,22 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Butonları ve harfleri kusursuz ortalar
+# CSS: Butonları tam kare (40x40px) yapar ve içeriği mükemmel ortalar
 st.markdown("""
     <style>
     div[data-testid="stColumn"] button {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
+        aspect-ratio: 1 / 1 !important;
+        width: 40px !important;
         height: 40px !important;
-        width: 100% !important;
         padding: 0 !important;
+        margin: 2px !important;
     }
     div[data-testid="stColumn"] button p {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
         margin: 0 !important;
-        width: 100% !important;
+        font-weight: bold !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -42,27 +41,25 @@ RUSCA_KIRIL_TABLO = {
 }
 
 def transliterasyon_yap(metin):
-    sonuc = ""
-    for karakter in metin:
-        sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
-    return sonuc
+    return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
-# Session State
+# State
 if "girdi_metni" not in st.session_state: st.session_state["girdi_metni"] = ""
 if "sonuc_metni" not in st.session_state: st.session_state["sonuc_metni"] = ""
 
 st.title("KIRIL2LATIN - Transliterasyon")
 
-col1, col2 = st.columns([1, 1.1])
+col1, col2 = st.columns([1, 1.2])
 
 with col1:
     st.write("Sanal Klavye")
     harfler = [("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-               ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "m"),
+               ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
                ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
+    # 7 sütunlu ızgara yapısı
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
@@ -92,5 +89,4 @@ with col2:
             tts.write_to_fp(fp)
             st.audio(fp.getvalue(), format='audio/mp3')
 
-    # Kopyalanabilir olması için disabled=False (varsayılan)
     st.text_area("Latin Sonucu:", value=st.session_state["sonuc_metni"], height=150)
