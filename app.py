@@ -4,10 +4,10 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Dikdörtgen butonlar ve düzenli hizalama
+# CSS: Klavye küçük/kompakt, İşlem butonları dikdörtgen ve metin kırmayan yapıda
 st.markdown("""
 <style>
-/* Klavye butonları */
+/* Klavye harf butonları */
 div.stButton > button {
     width: 32px !important;
     height: 32px !important;
@@ -20,21 +20,24 @@ div.stButton > button {
     border-radius: 4px !important;
 }
 
-/* İşlem butonları: Tam dikdörtgen yapısı */
+/* İşlem butonları (Dönüştür, Temizle, Sesle Oku) */
+/* Sadece bu sütunlardaki butonları hedefleyen dikdörtgen ayarları */
 div[data-testid="column"] button {
-    width: 140px !important;  /* Genişliği artırdık */
-    height: 45px !important;  /* Yüksekliği belirginleştirdik */
-    font-size: 15px !important;
-    font-weight: bold !important;
+    width: 140px !important;
+    height: 40px !important;
+    font-size: 14px !important;
+    padding: 0 10px !important;
     margin-top: 10px !important;
     border-radius: 5px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    white-space: nowrap !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
+# Harf Tablosu
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
@@ -57,6 +60,7 @@ if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
 st.title("KIRIL2LATIN")
 
+# Klavye, boşluk ve Metin alanları sütunları
 col_left, col_spacer, col_right = st.columns([1, 0.1, 1.5])
 
 with col_left:
@@ -80,6 +84,7 @@ with col_left:
 with col_right:
     st.session_state["girdi"] = st.text_area("Kiril Metin:", value=st.session_state["girdi"], height=100)
     
+    # İşlem butonlarını içeren sütunlar
     c1, c2, c3 = st.columns(3)
     if c1.button("Dönüştür"):
         st.session_state["sonuc"] = transliterasyon_yap(st.session_state["girdi"])
