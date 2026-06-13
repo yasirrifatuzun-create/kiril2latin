@@ -4,19 +4,28 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Butonlara sağ taraftan boşluk ekleyerek kutularla çakışmasını engelle
+# CSS: Tüm düzenlemeler burada
 st.markdown("""
 <style>
+/* Klavye butonları: Küçük ve kompakt */
 div.stButton > button {
     width: 32px !important;
     height: 32px !important;
     padding: 0 !important;
-    margin: 1px 4px 1px 1px !important; /* Sağ tarafa 4px boşluk */
+    margin: 1px 4px 1px 1px !important;
     font-size: 12px !important;
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
     border-radius: 4px !important;
+}
+
+/* İşlem butonları (Dönüştür, Temizle, Sesle Oku): Geniş ve okunaklı */
+div[data-testid="column"] button {
+    width: 120px !important;
+    height: 40px !important;
+    font-size: 14px !important;
+    margin-top: 10px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -43,7 +52,7 @@ if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
 st.title("KIRIL2LATIN")
 
-# Araya 0.1 oranında boşluk sütunu eklendi
+# Klavye (sol) ve Metin Alanları (sağ) arasındaki boşluk yönetimi
 col_left, col_spacer, col_right = st.columns([1, 0.1, 1.5])
 
 with col_left:
