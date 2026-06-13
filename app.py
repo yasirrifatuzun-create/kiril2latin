@@ -4,19 +4,19 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Butonları minik, bağımsız ve ızgaraya sığacak şekilde sabitledik
+# CSS: Butonları daha küçük, kompakt ve sıkı düzenli yap
 st.markdown("""
 <style>
 div.stButton > button {
-    width: 28px !important;
-    height: 28px !important;
+    width: 24px !important;    /* Daha küçük genişlik */
+    height: 24px !important;   /* Daha küçük yükseklik */
     padding: 0 !important;
-    margin: 1px !important;
-    font-size: 10px !important;
+    margin: 1px !important;    /* Butonlar arası boşluğu daralt */
+    font-size: 9px !important;  /* Yazı boyutunu minik tut */
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    border-radius: 3px !important;
+    border-radius: 2px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -55,7 +55,7 @@ with col1:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    # Her harf çiftini ayrı sütunlarda, ızgara düzeninde çiz
+    # Harfleri 7 sütunlu (her biri 2 buton) ızgarada diz
     for i in range(0, len(harfler), 7):
         cols = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
