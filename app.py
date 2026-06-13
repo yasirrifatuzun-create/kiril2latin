@@ -4,19 +4,19 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Butonları küçült, birbirinden ayır ve hatasız yap
+# CSS: Butonları minik, bağımsız ve ızgaraya sığacak şekilde sabitledik
 st.markdown("""
 <style>
 div.stButton > button {
-    width: 32px !important;
-    height: 32px !important;
+    width: 28px !important;
+    height: 28px !important;
     padding: 0 !important;
     margin: 1px !important;
-    font-size: 12px !important;
-    display: inline-flex !important;
+    font-size: 10px !important;
+    display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    border-radius: 4px !important;
+    border-radius: 3px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -39,6 +39,7 @@ RUSCA_KIRIL_TABLO = {
 def transliterasyon_yap(metin):
     return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
+# Session state yönetimi
 if "girdi" not in st.session_state: st.session_state["girdi"] = ""
 if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
@@ -54,13 +55,14 @@ with col1:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
+    # Her harf çiftini ayrı sütunlarda, ızgara düzeninde çiz
     for i in range(0, len(harfler), 7):
         cols = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
-            if cols[j*2].button(b, key=f"btn_b_{i}_{j}"):
+            if cols[j*2].button(b, key=f"b_{i}_{j}"):
                 st.session_state["girdi"] += b
                 st.rerun()
-            if cols[j*2+1].button(k, key=f"btn_k_{i}_{j}"):
+            if cols[j*2+1].button(k, key=f"k_{i}_{j}"):
                 st.session_state["girdi"] += k
                 st.rerun()
 
