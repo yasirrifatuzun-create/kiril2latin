@@ -5,10 +5,10 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Butonları tam kare (45x45px) yapar ve içeriği mükemmel ortalar
+# CSS: Butonları zorla kare (45x45px) yapıyoruz ve harfleri merkeze kilitliyoruz.
+# !important kuralları, Streamlit'in varsayılan stillerini ezip geçmek için şart.
 st.markdown("""
 <style>
-/* Buton boyutlarını sabitliyoruz (kare yapı) */
 div[data-testid="stColumn"] button {
     display: flex !important;
     align-items: center !important;
@@ -19,14 +19,12 @@ div[data-testid="stColumn"] button {
     padding: 0 !important;
     margin: 2px !important;
 }
-
-/* Harfleri kutunun tam merkezine kilitliyoruz */
 div[data-testid="stColumn"] button p {
     margin: 0 !important;
+    font-weight: bold !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    line-height: normal !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -47,41 +45,44 @@ RUSCA_KIRIL_TABLO = {
 }
 
 def transliterasyon_yap(metin):
-    sonuc = ""
-    for karakter in metin:
-        sonuc += RUSCA_KIRIL_TABLO.get(karakter, karakter)
-    return sonuc
+    return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
-# Session State
+# Session State Yönetimi
 if "girdi_metni" not in st.session_state: st.session_state["girdi_metni"] = ""
 if "sonuc_metni" not in st.session_state: st.session_state["sonuc_metni"] = ""
 
 st.title("KIRIL2LATIN - Transliterasyon")
 
-col1, col2 = st.columns([1, 1.1])
+col1, col2 = st.columns([1, 1.2])
 
 with col1:
     st.write("Sanal Klavye")
     harfler = [("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-               ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "m"),
+               ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
                ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
+    # Klavye ızgarası
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
-            if row[j*2].button(b):
+            # Her bir butona özel 'key' atadık, bu çakışmayı önler
+            if row[j*2].button(b, key=f"btn_{b}_{i}_{j}"):
                 st.session_state["girdi_metni"] += b
                 st.rerun()
-            if row[j*2+1].button(k):
+            if row[j*2+1].button(k, key=f"btn_{k}_{i}_{j}"):
                 st.session_state["girdi_metni"] += k
                 st.rerun()
 
 with col2:
-    # Metin alanı doğrudan session_state ile bağlı
+    # Metin girişi ve durum güncellemesi
     yeni_girdi = st.text_area("Kiril Metin:", value=st.session_state["girdi_metni"], height=150)
-    st.session_state["girdi_metni"] = yeni_girdi
+    
+    # Eğer kullanıcı text_area üzerinden manuel değişiklik yaparsa state güncellenir
+    if yeni_girdi != st.session_state["girdi_metni"]:
+        st.session_state["girdi_metni"] = yeni_girdi
+        st.rerun()
 
     b1, b2, b3 = st.columns(3)
     if b1.button("Dönüştür"):
@@ -98,5 +99,4 @@ with col2:
             tts.write_to_fp(fp)
             st.audio(fp.getvalue(), format='audio/mp3')
 
-    # Sonuç alanı kopyalanabilir
     st.text_area("Latin Sonucu:", value=st.session_state["sonuc_metni"], height=150)
