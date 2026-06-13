@@ -5,17 +5,16 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Butonları zorla kare (45x45px) yapıyoruz ve harfleri merkeze kilitliyoruz.
-# !important kuralları, Streamlit'in varsayılan stillerini ezip geçmek için şart.
+# CSS: Butonları kare yapıp içindeki harfleri ortalıyoruz
 st.markdown("""
 <style>
 div[data-testid="stColumn"] button {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 45px !important;
-    height: 45px !important;
-    min-width: 45px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
     padding: 0 !important;
     margin: 2px !important;
 }
@@ -47,7 +46,7 @@ RUSCA_KIRIL_TABLO = {
 def transliterasyon_yap(metin):
     return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
-# Session State Yönetimi
+# Session State
 if "girdi_metni" not in st.session_state: st.session_state["girdi_metni"] = ""
 if "sonuc_metni" not in st.session_state: st.session_state["sonuc_metni"] = ""
 
@@ -63,23 +62,20 @@ with col1:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    # Klavye ızgarası
+    # 7 sütunluk ızgara yapısı (Benzersiz key'ler ile hata önleme)
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
-            # Her bir butona özel 'key' atadık, bu çakışmayı önler
-            if row[j*2].button(b, key=f"btn_{b}_{i}_{j}"):
+            if row[j*2].button(b, key=f"b_{b}_{i}_{j}"):
                 st.session_state["girdi_metni"] += b
                 st.rerun()
-            if row[j*2+1].button(k, key=f"btn_{k}_{i}_{j}"):
+            if row[j*2+1].button(k, key=f"k_{k}_{i}_{j}"):
                 st.session_state["girdi_metni"] += k
                 st.rerun()
 
 with col2:
-    # Metin girişi ve durum güncellemesi
+    # Metin Giriş Alanı
     yeni_girdi = st.text_area("Kiril Metin:", value=st.session_state["girdi_metni"], height=150)
-    
-    # Eğer kullanıcı text_area üzerinden manuel değişiklik yaparsa state güncellenir
     if yeni_girdi != st.session_state["girdi_metni"]:
         st.session_state["girdi_metni"] = yeni_girdi
         st.rerun()
