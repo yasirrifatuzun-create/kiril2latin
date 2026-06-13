@@ -4,7 +4,15 @@ import io
 
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN - Transliterasyon", layout="wide")
-
+st.markdown("""
+    <style>
+    /* Sonuç kutusunun sadece seçilebilir olmasını sağlar */
+    textarea[disabled] {
+        cursor: text !important;
+        background-color: #f0f2f6 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 # Harfleri buton kutusunun tam ortasına oturtan CSS
 st.markdown("""
     <style>
