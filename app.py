@@ -2,13 +2,11 @@ import streamlit as st
 from gtts import gTTS
 import io
 
-# Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: En sola yaslı (girintisiz) şekilde sabitlenmiş tasarım
+# CSS - Girintisiz ve sabitlenmiş tasarım
 st.markdown("""
 <style>
-/* Buton boyutlarını sabitliyoruz (kare yapı) */
 div[data-testid="stColumn"] button {
     display: flex !important;
     align-items: center !important;
@@ -19,7 +17,6 @@ div[data-testid="stColumn"] button {
     padding: 0 !important;
     margin: 2px !important;
 }
-/* Harfleri kutunun tam merkezine kilitliyoruz */
 div[data-testid="stColumn"] button p {
     margin: 0 !important;
     font-weight: bold !important;
@@ -30,7 +27,6 @@ div[data-testid="stColumn"] button p {
 </style>
 """, unsafe_allow_html=True)
 
-# Harf Tablosu
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
@@ -48,7 +44,6 @@ RUSCA_KIRIL_TABLO = {
 def transliterasyon_yap(metin):
     return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
-# Session State
 if "girdi_metni" not in st.session_state: st.session_state["girdi_metni"] = ""
 if "sonuc_metni" not in st.session_state: st.session_state["sonuc_metni"] = ""
 
