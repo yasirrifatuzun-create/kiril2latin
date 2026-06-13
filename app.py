@@ -7,13 +7,25 @@ st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
 st.markdown("""
     <style>
-    /* Butonların içindeki içeriği merkezlemek için */
+    /* Butonların dış boyutuna dokunmuyoruz, sadece iç hizalamayı düzenliyoruz */
     div[data-testid="stColumn"] button {
         display: flex !important;
-        justify-content: center !important;
         align-items: center !important;
-        padding: 0 !important;
+        justify-content: center !important;
+        /* Padding ve boyutları koruyoruz, sadece içerik ortalansın */
+        padding: 0 !important; 
     }
+
+    /* Harflerin bulunduğu metin etiketini kutuya göre ortalıyoruz */
+    div[data-testid="stColumn"] button p {
+        margin: 0 !important;
+        line-height: normal !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
     /* Harf metnini merkeze tam oturtmak için */
     div[data-testid="stColumn"] button p {
