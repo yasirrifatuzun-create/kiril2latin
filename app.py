@@ -5,11 +5,24 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Sonuç kutusunun seçilebilir olması için
 st.markdown("""
     <style>
-    .stTextArea textarea {
-        cursor: text !important;
+    /* Butonların içindeki içeriği merkezlemek için */
+    div[data-testid="stColumn"] button {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 0 !important;
+    }
+
+    /* Harf metnini merkeze tam oturtmak için */
+    div[data-testid="stColumn"] button p {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 0 !important;
+        width: 100% !important;
+        text-align: center !important;
     }
     </style>
 """, unsafe_allow_html=True)
