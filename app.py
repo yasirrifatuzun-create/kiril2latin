@@ -4,27 +4,23 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Sola yaslı, düzenli ve iç içe geçmeyen buton yapısı
+# CSS: Buton boyutlarını sabit tut, hizalamayı Streamlit sütunları yapacak
 st.markdown("""
 <style>
-/* Butonları sola yasla ve düzenli bir grid oluştur */
-.keyboard-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 5px;
-}
 div.stButton > button {
-    width: 35px !important;
-    height: 35px !important;
+    width: 32px !important;
+    height: 32px !important;
     padding: 0 !important;
-    font-size: 14px !important;
+    margin: 1px !important;
+    font-size: 12px !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
     border-radius: 4px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Harf Tablosu
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
@@ -47,25 +43,29 @@ if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
 st.title("KIRIL2LATIN")
 
-col1, col2 = st.columns([1, 1])
+# Sütun oranlarını [0.8, 1.2] yaparak sol tarafın (klavyenin) daralmasını 
+# ve sola yaslanmasını sağlıyoruz.
+col_left, col_right = st.columns([0.8, 1.2])
 
-with col1:
+with col_left:
     st.subheader("Sanal Klavye")
-    # Butonları kapsayıcı içine alıp sola yaslıyoruz
-    st.markdown('<div class="keyboard-container">', unsafe_allow_html=True)
-    harfler = ["А", "а", "Б", "б", "В", "в", "Г", "г", "Д", "д", "Е", "е", "Ё", "ё",
-               "Ж", "ж", "З", "з", "И", "и", "Й", "й", "К", "к", "Л", "л", "М", "м",
-               "Н", "н", "О", "о", "П", "п", "Р", "р", "С", "с", "Т", "т", "У", "у",
-               "Ф", "ф", "Х", "х", "Ц", "ц", "Ч", "ч", "Ш", "ш", "Щ", "щ", "Ъ", "ъ",
-               "Ы", "ы", "Ь", "ь", "Э", "э", "Ю", "ю", "Я", "я"]
+    harfler = [("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
+               ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
+               ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
+               ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
+               ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    for h in harfler:
-        if st.button(h, key=f"btn_{h}"):
-            st.session_state["girdi"] += h
-            st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    for i in range(0, len(harfler), 7):
+        row = st.columns(14)
+        for j, (b, k) in enumerate(harfler[i:i+7]):
+            if row[j*2].button(b, key=f"b_{i}_{j}"):
+                st.session_state["girdi"] += b
+                st.rerun()
+            if row[j*2+1].button(k, key=f"k_{i}_{j}"):
+                st.session_state["girdi"] += k
+                st.rerun()
 
-with col2:
+with col_right:
     st.session_state["girdi"] = st.text_area("Kiril Metin:", value=st.session_state["girdi"], height=100)
     
     c1, c2, c3 = st.columns(3)
