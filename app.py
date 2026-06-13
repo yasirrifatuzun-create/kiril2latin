@@ -4,19 +4,19 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Butonların birbirine yapışmasını önlemek için 'margin' eklendi
-# 'inline-block' ve genişlik sabitleme ile her buton bağımsız birer kutu oldu.
+# CSS: Butonları küçült, birbirinden ayır ve hatasız yap
 st.markdown("""
 <style>
 div.stButton > button {
-    width: 40px !important;
-    height: 40px !important;
+    width: 32px !important;
+    height: 32px !important;
     padding: 0 !important;
-    margin: 2px !important;
+    margin: 1px !important;
+    font-size: 12px !important;
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
-    border-radius: 5px !important;
+    border-radius: 4px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -54,11 +54,9 @@ with col1:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    # Butonları satır bazlı yönetiyoruz
     for i in range(0, len(harfler), 7):
         cols = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
-            # Benzersiz anahtarlar ile butonları birbirinden ayırıyoruz
             if cols[j*2].button(b, key=f"btn_b_{i}_{j}"):
                 st.session_state["girdi"] += b
                 st.rerun()
