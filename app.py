@@ -5,9 +5,10 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: En sola yaslı (girintisiz) şekilde CSS bloğu
+# CSS: En sola yaslı (girintisiz) şekilde sabitlenmiş tasarım
 st.markdown("""
 <style>
+/* Buton boyutlarını sabitliyoruz (kare yapı) */
 div[data-testid="stColumn"] button {
     display: flex !important;
     align-items: center !important;
@@ -18,6 +19,7 @@ div[data-testid="stColumn"] button {
     padding: 0 !important;
     margin: 2px !important;
 }
+/* Harfleri kutunun tam merkezine kilitliyoruz */
 div[data-testid="stColumn"] button p {
     margin: 0 !important;
     font-weight: bold !important;
@@ -46,7 +48,7 @@ RUSCA_KIRIL_TABLO = {
 def transliterasyon_yap(metin):
     return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
-# Session State Yönetimi
+# Session State
 if "girdi_metni" not in st.session_state: st.session_state["girdi_metni"] = ""
 if "sonuc_metni" not in st.session_state: st.session_state["sonuc_metni"] = ""
 
@@ -62,19 +64,17 @@ with col1:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    # Her butona benzersiz key atayarak çakışmaları engelledik
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
-            if row[j*2].button(b, key=f"b_{b}_{i}_{j}"):
+            if row[j*2].button(b, key=f"btn_b_{i}_{j}"):
                 st.session_state["girdi_metni"] += b
                 st.rerun()
-            if row[j*2+1].button(k, key=f"k_{k}_{i}_{j}"):
+            if row[j*2+1].button(k, key=f"btn_k_{i}_{j}"):
                 st.session_state["girdi_metni"] += k
                 st.rerun()
 
 with col2:
-    # Metin girişi ve durum güncellemesi
     yeni_girdi = st.text_area("Kiril Metin:", value=st.session_state["girdi_metni"], height=150)
     if yeni_girdi != st.session_state["girdi_metni"]:
         st.session_state["girdi_metni"] = yeni_girdi
