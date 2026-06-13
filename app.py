@@ -7,21 +7,25 @@ st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
 st.markdown("""
 <style>
-/* Butonların dış boyutuna dokunmuyoruz, sadece iç hizalamayı düzenliyoruz */
+/* Buton boyutlarını sabitliyoruz (kare yapı) */
 div[data-testid="stColumn"] button {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    width: 45px !important;
+    height: 45px !important;
+    min-width: 45px !important;
     padding: 0 !important;
+    margin: 2px !important;
 }
 
-/* Harflerin bulunduğu metin etiketini kutuya göre ortalıyoruz */
+/* Harfleri kutunun tam merkezine kilitliyoruz */
 div[data-testid="stColumn"] button p {
     margin: 0 !important;
-    line-height: normal !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    line-height: normal !important;
 }
 </style>
 """, unsafe_allow_html=True)
