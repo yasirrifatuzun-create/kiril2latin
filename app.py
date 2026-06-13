@@ -4,10 +4,10 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Harfler tam ortalı (kare), İşlem butonları dikdörtgen
+# CSS: Harfler KARE ve TAM ORTALI, İşlem butonları DİKDÖRTGEN
 st.markdown("""
 <style>
-/* 1. Harf Butonları: Kare yapı ve TAM ORTALI harfler */
+/* 1. Harf Butonları: KARE yapı ve içerik tam ORTALI */
 div[data-testid="column"] button {
     width: 32px !important;
     height: 32px !important;
@@ -15,15 +15,14 @@ div[data-testid="column"] button {
     margin: 1px 2px 1px 1px !important;
     font-size: 12px !important;
     border-radius: 4px !important;
-    /* Metni tam ortalamak için */
+    /* Metni tam merkezlemek için gerekli flex ayarları */
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
-    vertical-align: middle !important;
+    text-align: center !important;
 }
 
-/* 2. İşlem Butonları (Dönüştür, Temizle, Sesle Oku): Dikdörtgen yapı */
-/* Sadece ana işlem butonlarını hedeflemek için daha spesifik seçici */
+/* 2. İşlem Butonları (Dönüştür, Temizle, Sesle Oku): DİKDÖRTGEN yapı */
 div[data-testid="column"] div.stButton > button[kind="secondary"] {
     width: 140px !important;
     height: 45px !important;
