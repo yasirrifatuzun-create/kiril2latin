@@ -4,14 +4,14 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Buton boyutlarını sabit tut, hizalamayı Streamlit sütunları yapacak
+# CSS: Butonlara sağ taraftan boşluk ekleyerek kutularla çakışmasını engelle
 st.markdown("""
 <style>
 div.stButton > button {
     width: 32px !important;
     height: 32px !important;
     padding: 0 !important;
-    margin: 1px !important;
+    margin: 1px 4px 1px 1px !important; /* Sağ tarafa 4px boşluk */
     font-size: 12px !important;
     display: inline-flex !important;
     justify-content: center !important;
@@ -43,9 +43,8 @@ if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
 st.title("KIRIL2LATIN")
 
-# Sütun oranlarını [0.8, 1.2] yaparak sol tarafın (klavyenin) daralmasını 
-# ve sola yaslanmasını sağlıyoruz.
-col_left, col_right = st.columns([0.8, 1.2])
+# Araya 0.1 oranında boşluk sütunu eklendi
+col_left, col_spacer, col_right = st.columns([1, 0.1, 1.5])
 
 with col_left:
     st.subheader("Sanal Klavye")
