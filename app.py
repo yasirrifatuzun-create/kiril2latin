@@ -1,97 +1,23 @@
-import streamlit as st
-from gtts import gTTS
-import io
-
-# Sayfa Ayarları
-st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
-
-# CSS: Butonları tam kare (40x40px) yapar ve içeriği mükemmel ortalar
 st.markdown("""
     <style>
+    /* Butonları zorla kare ve ortalı yap */
     div[data-testid="stColumn"] button {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        aspect-ratio: 1 / 1 !important;
-        width: 40px !important;
-        height: 40px !important;
+        width: 45px !important;  /* Genişliği sabitledik */
+        height: 45px !important; /* Yüksekliği genişlikle aynı yaptık (KARE) */
         padding: 0 !important;
         margin: 2px !important;
+        min-width: 45px !important;
     }
+    /* Harfi butonun içinde merkeze tam oturt */
     div[data-testid="stColumn"] button p {
         margin: 0 !important;
         font-weight: bold !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
     }
     </style>
 """, unsafe_allow_html=True)
-
-# Harf Tablosu (Küçük 'т' = 't')
-RUSCA_KIRIL_TABLO = {
-    'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
-    'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
-    'Ё': 'Yo', 'ё': 'yo', 'Ж': 'J', 'ж': 'j', 'З': 'Z', 'з': 'z',
-    'И': 'İ', 'и': 'i', 'Й': 'Y', 'й': 'y', 'К': 'K', 'к': 'k',
-    'Л': 'L', 'л': 'l', 'М': 'M', 'м': 'm', 'Н': 'N', 'н': 'n',
-    'О': 'O', 'о': 'o', 'П': 'P', 'п': 'p', 'Р': 'R', 'р': 'r',
-    'С': 'S', 'с': 's', 'Т': 'T', 'т': 't', 'У': 'U', 'у': 'u',
-    'Ф': 'F', 'ф': 'f', 'Х': 'H', 'х': 'h', 'Ц': 'Ts', 'ц': 'ts',
-    'Ч': 'Ç', 'ч': 'ç', 'Ш': 'Ş', 'ш': 'ş', 'Щ': 'Şç', 'щ': 'şç',
-    'Ъ': "'", 'ъ': "'", 'Ы': 'I', 'ы': 'ı', 'Ь': "^", 'ь': "^",
-    'Э': 'E', 'э': 'e', 'Ю': 'Yu', 'ю': 'yu', 'Я': 'Ya', 'я': 'ya'
-}
-
-def transliterasyon_yap(metin):
-    return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
-
-# Session State Yönetimi
-if "girdi_metni" not in st.session_state: st.session_state["girdi_metni"] = ""
-if "sonuc_metni" not in st.session_state: st.session_state["sonuc_metni"] = ""
-
-# Arayüz
-st.title("KIRIL2LATIN - Transliterasyon")
-
-# Tasarım: Sol taraf klavye, sağ taraf metin kutuları
-col1, col2 = st.columns([1, 1.2])
-
-with col1:
-    st.write("Sanal Klavye")
-    harfler = [("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
-               ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
-               ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
-               ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
-               ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
-    
-    # 7 çift (14 buton) içeren ızgara yapısı
-    for i in range(0, len(harfler), 7):
-        row = st.columns(14)
-        for j, (b, k) in enumerate(harfler[i:i+7]):
-            if row[j*2].button(b):
-                st.session_state["girdi_metni"] += b
-                st.rerun()
-            if row[j*2+1].button(k):
-                st.session_state["girdi_metni"] += k
-                st.rerun()
-
-with col2:
-    # Metin Giriş Alanı
-    yeni_girdi = st.text_area("Kiril Metin:", value=st.session_state["girdi_metni"], height=150)
-    st.session_state["girdi_metni"] = yeni_girdi
-
-    # İşlem Butonları
-    b1, b2, b3 = st.columns(3)
-    if b1.button("Dönüştür"):
-        st.session_state["sonuc_metni"] = transliterasyon_yap(st.session_state["girdi_metni"])
-        st.rerun()
-    if b2.button("Temizle"):
-        st.session_state["girdi_metni"] = ""
-        st.session_state["sonuc_metni"] = ""
-        st.rerun()
-    if b3.button("Sesle Oku"):
-        if st.session_state["girdi_metni"]:
-            tts = gTTS(text=st.session_state["girdi_metni"], lang='ru')
-            fp = io.BytesIO()
-            tts.write_to_fp(fp)
-            st.audio(fp.getvalue(), format='audio/mp3')
-
-    # Kopyalanabilir Sonuç Alanı
-    st.text_area("Latin Sonucu:", value=st.session_state["sonuc_metni"], height=150)
