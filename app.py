@@ -25,7 +25,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Harf Tablosu
+# Harf Tablosu (Küçük 'т' = 't')
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
@@ -43,12 +43,14 @@ RUSCA_KIRIL_TABLO = {
 def transliterasyon_yap(metin):
     return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
-# State
+# Session State Yönetimi
 if "girdi_metni" not in st.session_state: st.session_state["girdi_metni"] = ""
 if "sonuc_metni" not in st.session_state: st.session_state["sonuc_metni"] = ""
 
+# Arayüz
 st.title("KIRIL2LATIN - Transliterasyon")
 
+# Tasarım: Sol taraf klavye, sağ taraf metin kutuları
 col1, col2 = st.columns([1, 1.2])
 
 with col1:
@@ -59,7 +61,7 @@ with col1:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    # 7 sütunlu ızgara yapısı
+    # 7 çift (14 buton) içeren ızgara yapısı
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
@@ -71,9 +73,11 @@ with col1:
                 st.rerun()
 
 with col2:
+    # Metin Giriş Alanı
     yeni_girdi = st.text_area("Kiril Metin:", value=st.session_state["girdi_metni"], height=150)
     st.session_state["girdi_metni"] = yeni_girdi
 
+    # İşlem Butonları
     b1, b2, b3 = st.columns(3)
     if b1.button("Dönüştür"):
         st.session_state["sonuc_metni"] = transliterasyon_yap(st.session_state["girdi_metni"])
@@ -89,4 +93,5 @@ with col2:
             tts.write_to_fp(fp)
             st.audio(fp.getvalue(), format='audio/mp3')
 
+    # Kopyalanabilir Sonuç Alanı
     st.text_area("Latin Sonucu:", value=st.session_state["sonuc_metni"], height=150)
