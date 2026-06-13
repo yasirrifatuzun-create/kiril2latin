@@ -7,23 +7,24 @@ st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 # CSS: Harfler KARE ve TAM ORTALI, İşlem butonları DİKDÖRTGEN
 st.markdown("""
 <style>
-/* 1. Harf Butonları: KARE yapı ve içerik tam ORTALI */
-div[data-testid="column"] button {
+/* 1. Harf Butonları: Kare yapı ve metin TAM ORTALI */
+div[data-testid="column"] button:not([kind="secondary"]) {
     width: 32px !important;
     height: 32px !important;
     padding: 0 !important;
     margin: 1px 2px 1px 1px !important;
     font-size: 12px !important;
     border-radius: 4px !important;
-    /* Metni tam merkezlemek için gerekli flex ayarları */
+    /* Metni tam merkezlemek için */
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
     text-align: center !important;
+    line-height: 1 !important;
 }
 
-/* 2. İşlem Butonları (Dönüştür, Temizle, Sesle Oku): DİKDÖRTGEN yapı */
-div[data-testid="column"] div.stButton > button[kind="secondary"] {
+/* 2. İşlem Butonları (Dönüştür, Temizle, Sesle Oku): Dikdörtgen yapı */
+div[data-testid="column"] button[kind="secondary"] {
     width: 140px !important;
     height: 45px !important;
     font-size: 14px !important;
