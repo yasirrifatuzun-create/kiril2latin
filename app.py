@@ -5,7 +5,7 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Butonları zorla kare ve harfleri merkeze kilitler
+# CSS: En sola yaslanmış ve hata yapmayacak şekilde düzenlendi
 st.markdown("""
 <style>
 div[data-testid="stColumn"] button {
@@ -62,13 +62,14 @@ with col1:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
+    # Her butona benzersiz key atayarak çakışmaları engelledik
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
-            if row[j*2].button(b, key=f"btn_b_{i}_{j}"):
+            if row[j*2].button(b, key=f"b_{b}_{i}_{j}"):
                 st.session_state["girdi_metni"] += b
                 st.rerun()
-            if row[j*2+1].button(k, key=f"btn_k_{i}_{j}"):
+            if row[j*2+1].button(k, key=f"k_{k}_{i}_{j}"):
                 st.session_state["girdi_metni"] += k
                 st.rerun()
 
