@@ -4,23 +4,23 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Her butonu tam 40x40 kare alan içine hapsediyoruz.
-# `inline-block` ve `fixed width` ile kutuların ayrılmasını sağlıyoruz.
+# BU BLOĞU EN BAŞA, HİÇBİR ŞEYİN İÇİNE GİRMEDEN YAPIŞTIR.
+# BAŞINDA HİÇBİR BOŞLUK OLMADIĞINDAN EMİN OL.
 st.markdown("""
 <style>
-.stButton > button {
+div[data-testid="stColumn"] button {
     width: 40px !important;
     height: 40px !important;
+    min-width: 40px !important;
     padding: 0 !important;
-    margin: 2px !important;
-    display: inline-flex !important;
+    display: flex !important;
     justify-content: center !important;
     align-items: center !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Harf Tablosu
+# --- Kodun kalanı ---
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
     'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Е': 'Ye', 'е': 'ye',
@@ -41,19 +41,18 @@ def transliterasyon_yap(metin):
 if "girdi" not in st.session_state: st.session_state["girdi"] = ""
 if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
-st.title("KIRIL2LATIN")
+st.title("KIRIL2LATIN - Transliterasyon")
 
-col1, col2 = st.columns([1, 1.2])
+col1, col2 = st.columns([1, 1.5])
 
 with col1:
-    st.subheader("Sanal Klavye")
+    st.write("Sanal Klavye")
     harfler = [("А", "а"), ("Б", "б"), ("В", "в"), ("Г", "г"), ("Д", "д"), ("Е", "е"), ("Ё", "ё"),
                ("Ж", "ж"), ("З", "з"), ("И", "и"), ("Й", "й"), ("К", "к"), ("Л", "л"), ("М", "м"),
                ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
-    # Butonları satır satır ve tam ayrı kutular olarak oluştur
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
@@ -65,21 +64,21 @@ with col1:
                 st.rerun()
 
 with col2:
-    st.session_state["girdi"] = st.text_area("Kiril Metin:", value=st.session_state["girdi"], height=100)
+    st.session_state["girdi"] = st.text_area("Kiril Metin:", value=st.session_state["girdi"], height=150)
     
-    c1, c2, c3 = st.columns(3)
-    if c1.button("Dönüştür"):
+    b1, b2, b3 = st.columns(3)
+    if b1.button("Dönüştür"):
         st.session_state["sonuc"] = transliterasyon_yap(st.session_state["girdi"])
         st.rerun()
-    if c2.button("Temizle"):
+    if b2.button("Temizle"):
         st.session_state["girdi"] = ""
         st.session_state["sonuc"] = ""
         st.rerun()
-    if c3.button("Sesle Oku"):
+    if b3.button("Sesle Oku"):
         if st.session_state["girdi"]:
             tts = gTTS(text=st.session_state["girdi"], lang='ru')
             fp = io.BytesIO()
             tts.write_to_fp(fp)
             st.audio(fp.getvalue(), format='audio/mp3')
 
-    st.text_area("Latin Sonucu:", value=st.session_state["sonuc"], height=100)
+    st.text_area("Latin Sonucu:", value=st.session_state["sonuc"], height=150)
