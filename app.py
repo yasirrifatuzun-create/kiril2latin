@@ -6,39 +6,25 @@ import io
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
 st.markdown("""
-    <style>
-    /* Butonların dış boyutuna dokunmuyoruz, sadece iç hizalamayı düzenliyoruz */
-    div[data-testid="stColumn"] button {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        /* Padding ve boyutları koruyoruz, sadece içerik ortalansın */
-        padding: 0 !important; 
-    }
+<style>
+/* Butonların dış boyutuna dokunmuyoruz, sadece iç hizalamayı düzenliyoruz */
+div[data-testid="stColumn"] button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+}
 
-    /* Harflerin bulunduğu metin etiketini kutuya göre ortalıyoruz */
-    div[data-testid="stColumn"] button p {
-        margin: 0 !important;
-        line-height: normal !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    </style>
+/* Harflerin bulunduğu metin etiketini kutuya göre ortalıyoruz */
+div[data-testid="stColumn"] button p {
+    margin: 0 !important;
+    line-height: normal !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+</style>
 """, unsafe_allow_html=True)
-
-    /* Harf metnini merkeze tam oturtmak için */
-    div[data-testid="stColumn"] button p {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        margin: 0 !important;
-        width: 100% !important;
-        text-align: center !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # Harf Tablosu
 RUSCA_KIRIL_TABLO = {
     'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
