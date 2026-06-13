@@ -5,11 +5,23 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Sonuç kutusunun seçilebilir olması için
+# CSS: Butonları ve harfleri kusursuz ortalar
 st.markdown("""
     <style>
-    .stTextArea textarea {
-        cursor: text !important;
+    div[data-testid="stColumn"] button {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        height: 40px !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+    div[data-testid="stColumn"] button p {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 0 !important;
+        width: 100% !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -50,6 +62,7 @@ with col1:
                ("Н", "н"), ("О", "о"), ("П", "п"), ("Р", "р"), ("С", "с"), ("Т", "т"), ("У", "у"),
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
+    
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
@@ -79,5 +92,5 @@ with col2:
             tts.write_to_fp(fp)
             st.audio(fp.getvalue(), format='audio/mp3')
 
-    # Kopyalanabilir olması için disabled=False (veya varsayılan) tutuyoruz
+    # Kopyalanabilir olması için disabled=False (varsayılan)
     st.text_area("Latin Sonucu:", value=st.session_state["sonuc_metni"], height=150)
