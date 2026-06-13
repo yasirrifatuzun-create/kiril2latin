@@ -4,10 +4,10 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Tüm düzenlemeler tek blokta
+# CSS: Klavye kare, İşlem butonları dikdörtgen
 st.markdown("""
 <style>
-/* Klavye harf butonları: Küçük ve kompakt */
+/* 1. Klavye harf butonları: Küçük ve kare */
 div.stButton > button {
     width: 32px !important;
     height: 32px !important;
@@ -20,17 +20,19 @@ div.stButton > button {
     border-radius: 4px !important;
 }
 
-/* İşlem butonları: Dikdörtgen ve metni kırmayan yapı */
-.stButton button[kind="secondary"] {
+/* 2. İşlem butonları: Dikdörtgen ve metin kırmayan yapı */
+/* Sadece ana sütundaki işlem butonlarını hedefliyoruz */
+div[data-testid="column"] button {
     width: 140px !important;
     height: 45px !important;
-    white-space: nowrap !important; /* Metni alt satıra geçirme */
+    white-space: nowrap !important;
     font-size: 14px !important;
     padding: 0 10px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     border-radius: 5px !important;
+    margin-top: 10px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -58,7 +60,6 @@ if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
 st.title("KIRIL2LATIN")
 
-# Klavye, boşluk ve Metin alanları sütunları
 col_left, col_spacer, col_right = st.columns([1, 0.1, 1.5])
 
 with col_left:
@@ -69,6 +70,7 @@ with col_left:
                ("Ф", "ф"), ("Х", "х"), ("Ц", "ц"), ("Ч", "ч"), ("Ш", "ш"), ("Щ", "щ"), ("Ъ", "ъ"),
                ("Ы", "ы"), ("Ь", "ь"), ("Э", "э"), ("Ю", "ю"), ("Я", "я")]
     
+    # Harf butonları için düzen
     for i in range(0, len(harfler), 7):
         row = st.columns(14)
         for j, (b, k) in enumerate(harfler[i:i+7]):
