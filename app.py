@@ -106,4 +106,11 @@ with sag_sutun:
             tts.write_to_fp(fp)
             st.audio(fp.getvalue(), format='audio/mp3')
 
-    st.text_area("Latin Alfabesi Sonucu:", value=st.session_state["sonuc_metni"], height=150, disabled=True)
+   # Sadece disabled=True'yu kaldırıyoruz, artık kopyalanabilir olacak
+    st.text_area(
+        label="Latin Alfabesi Sonucu:",
+        value=st.session_state["sonuc_metni"],
+        height=150,
+        key="latin_sonuc_kutusu",
+        label_visibility="collapsed"
+    )
