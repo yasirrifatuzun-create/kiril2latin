@@ -5,7 +5,7 @@ import io
 # Sayfa Ayarları
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: En sola yaslanmış ve hata yapmayacak şekilde düzenlendi
+# CSS: En sola yaslı (girintisiz) şekilde CSS bloğu
 st.markdown("""
 <style>
 div[data-testid="stColumn"] button {
@@ -46,7 +46,7 @@ RUSCA_KIRIL_TABLO = {
 def transliterasyon_yap(metin):
     return "".join([RUSCA_KIRIL_TABLO.get(k, k) for k in metin])
 
-# Session State
+# Session State Yönetimi
 if "girdi_metni" not in st.session_state: st.session_state["girdi_metni"] = ""
 if "sonuc_metni" not in st.session_state: st.session_state["sonuc_metni"] = ""
 
@@ -74,6 +74,7 @@ with col1:
                 st.rerun()
 
 with col2:
+    # Metin girişi ve durum güncellemesi
     yeni_girdi = st.text_area("Kiril Metin:", value=st.session_state["girdi_metni"], height=150)
     if yeni_girdi != st.session_state["girdi_metni"]:
         st.session_state["girdi_metni"] = yeni_girdi
