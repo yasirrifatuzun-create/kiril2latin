@@ -4,10 +4,10 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Tüm düzenlemeler burada
+# CSS: Dikdörtgen butonlar ve düzenli hizalama
 st.markdown("""
 <style>
-/* Klavye butonları: Küçük ve kompakt */
+/* Klavye butonları */
 div.stButton > button {
     width: 32px !important;
     height: 32px !important;
@@ -20,12 +20,17 @@ div.stButton > button {
     border-radius: 4px !important;
 }
 
-/* İşlem butonları (Dönüştür, Temizle, Sesle Oku): Geniş ve okunaklı */
+/* İşlem butonları: Tam dikdörtgen yapısı */
 div[data-testid="column"] button {
-    width: 120px !important;
-    height: 40px !important;
-    font-size: 14px !important;
+    width: 140px !important;  /* Genişliği artırdık */
+    height: 45px !important;  /* Yüksekliği belirginleştirdik */
+    font-size: 15px !important;
+    font-weight: bold !important;
     margin-top: 10px !important;
+    border-radius: 5px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -52,7 +57,6 @@ if "sonuc" not in st.session_state: st.session_state["sonuc"] = ""
 
 st.title("KIRIL2LATIN")
 
-# Klavye (sol) ve Metin Alanları (sağ) arasındaki boşluk yönetimi
 col_left, col_spacer, col_right = st.columns([1, 0.1, 1.5])
 
 with col_left:
