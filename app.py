@@ -4,25 +4,27 @@ import io
 
 st.set_page_config(page_title="KIRIL2LATIN", layout="wide")
 
-# CSS: Harf butonları KARE, İşlem butonları DİKDÖRTGEN
+# CSS: Harfler tam ortalı (kare), İşlem butonları dikdörtgen
 st.markdown("""
 <style>
-/* 1. Harf Butonları: Sadece kare yapı, küçük */
-div[data-testid="column"] > div > div > div > div > button {
+/* 1. Harf Butonları: Kare yapı ve TAM ORTALI harfler */
+div[data-testid="column"] button {
     width: 32px !important;
     height: 32px !important;
     padding: 0 !important;
-    margin: 1px 4px 1px 1px !important;
+    margin: 1px 2px 1px 1px !important;
     font-size: 12px !important;
     border-radius: 4px !important;
+    /* Metni tam ortalamak için */
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
+    vertical-align: middle !important;
 }
 
 /* 2. İşlem Butonları (Dönüştür, Temizle, Sesle Oku): Dikdörtgen yapı */
-/* Butonları içeren sütunlardaki özel yapı */
-div[data-testid="column"] button:not(:has(div)) {
+/* Sadece ana işlem butonlarını hedeflemek için daha spesifik seçici */
+div[data-testid="column"] div.stButton > button[kind="secondary"] {
     width: 140px !important;
     height: 45px !important;
     font-size: 14px !important;
@@ -83,7 +85,6 @@ with col_left:
 with col_right:
     st.session_state["girdi"] = st.text_area("Kiril Metin:", value=st.session_state["girdi"], height=100)
     
-    # İşlem butonları (Dikdörtgen)
     c1, c2, c3 = st.columns(3)
     if c1.button("Dönüştür"):
         st.session_state["sonuc"] = transliterasyon_yap(st.session_state["girdi"])
